@@ -53,12 +53,25 @@ const RoleBasedRedirect = () => {
   }
 };
 
+const getRouteTransitionKey = (pathname) => {
+  if (pathname === "/customer" || pathname.startsWith("/customer/")) {
+    return "customer-workspace";
+  }
+  if (pathname === "/mechanic" || pathname.startsWith("/mechanic/")) {
+    return "mechanic-workspace";
+  }
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return "admin-workspace";
+  }
+  return pathname;
+};
+
 const AnimatedRoutes = () => {
   const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      <Routes location={location} key={getRouteTransitionKey(location.pathname)}>
         {/* Public routes */}
         <Route
           path="/"

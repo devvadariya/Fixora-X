@@ -12,7 +12,7 @@ const WorkspaceLayout = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-surface text-secondary-900">
+    <div className="min-h-screen overflow-x-clip bg-surface text-secondary-900">
       <div className="flex min-h-screen">
         <Sidebar
           navigationItems={navigationItems}

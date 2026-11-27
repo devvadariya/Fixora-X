@@ -104,6 +104,15 @@ const authReducer = (state, action) => {
   }
 };
 
+const initUserSocket = (token, user) => {
+  if (!token) return;
+  socketService.init(token);
+  const userId = user?.id || user?._id;
+  if (userId) {
+    socketService.joinUserRoom(userId);
+  }
+};
+
 // Create context
 const AuthContext = createContext();
 
@@ -164,14 +173,7 @@ export const AuthProvider = ({ children }) => {
             // Initialize socket connection
             const token = authService.getAccessToken();
             if (token) {
-              socketService.init(token);
-
-              // Join user room after socket connects
-              setTimeout(() => {
-                if (user && user._id) {
-                  socketService.joinUserRoom(user._id);
-                }
-              }, 1000);
+              initUserSocket(token, user);
             }
 
             console.log("User session restored successfully");
@@ -184,14 +186,7 @@ export const AuthProvider = ({ children }) => {
 
               const token = authService.getAccessToken();
               if (token) {
-                socketService.init(token);
-
-                // Join user room after socket connects
-                setTimeout(() => {
-                  if (user && user._id) {
-                    socketService.joinUserRoom(user._id);
-                  }
-                }, 1000);
+                initUserSocket(token, user);
               }
             } catch (error) {
               console.error("Token refresh failed, logging out:", error);
@@ -269,6 +264,10 @@ export const AuthProvider = ({ children }) => {
             "AuthContext: localStorage has data but state not authenticated, syncing",
           );
           dispatch({ type: AUTH_ACTIONS.SET_USER, payload: user });
+          const token = authService.getAccessToken();
+          if (token && !socketService.getRequestNamespace()) {
+            initUserSocket(token, user);
+          }
         }
       }
     };
@@ -334,7 +333,7 @@ export const AuthProvider = ({ children }) => {
         // Initialize socket connection
         const token = response.data.tokens.accessToken;
         if (token) {
-          socketService.init(token);
+          initUserSocket(token, response.data.user);
         }
 
         toast.success("Login successful!");
@@ -364,7 +363,7 @@ export const AuthProvider = ({ children }) => {
         // Initialize socket connection
         const token = authService.getAccessToken();
         if (token) {
-          socketService.init(token);
+          initUserSocket(token, response.data.user);
         }
 
         toast.success("Login successful!");

@@ -432,8 +432,13 @@ const schemas = {
   sendMessage: Joi.object({
     content: Joi.string().trim().min(1).max(1000).required(),
     messageType: Joi.string().valid('text', 'image', 'file').default('text'),
-    fileUrl: Joi.string().uri().optional()
-  })
+    fileUrl: Joi.string().trim().uri({ allowRelative: true }).allow(null, '').optional()
+  }),
+
+  createDirectChat: Joi.object({
+    mechanicId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
+    customerId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional()
+  }).or('mechanicId', 'customerId')
 };
 
 module.exports = {

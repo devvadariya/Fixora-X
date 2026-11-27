@@ -1,8 +1,10 @@
 import {
   CalendarIcon,
   ChartBarIcon,
+  ChatBubbleLeftIcon,
   ClockIcon,
   CogIcon,
+  CreditCardIcon,
   CurrencyDollarIcon,
   DocumentTextIcon,
   HomeIcon,
@@ -26,6 +28,8 @@ const iconMap = {
   CogIcon,
   CalendarIcon,
   DocumentTextIcon,
+  ChatBubbleLeftIcon,
+  CreditCardIcon,
 };
 
 const Sidebar = ({

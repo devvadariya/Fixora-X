@@ -1,8 +1,145 @@
+const mongoose = require('mongoose');
 const Chat = require('../models/Chat');
 const ServiceRequest = require('../models/ServiceRequest');
 const User = require('../models/User');
 const { sendSuccessResponse, sendErrorResponse } = require('../utils/response');
 const logger = require('../config/logger');
+
+const isChatParticipant = (chat, userId) =>
+  chat.participants.some((participant) => participant.toString() === userId.toString());
+
+const findChatByIdentifier = async (identifier) => {
+  if (!mongoose.Types.ObjectId.isValid(identifier)) {
+    return null;
+  }
+
+  let chat = await Chat.findOne({ serviceRequest: identifier, isActive: true });
+  if (!chat) {
+    chat = await Chat.findOne({ _id: identifier, isActive: true });
+  }
+  return chat;
+};
+
+const formatChatSocketPayload = (chat, savedMessage, fallbackUser) => {
+  const chatId = chat._id.toString();
+  const requestId = chat.serviceRequest ? chat.serviceRequest.toString() : chatId;
+  const senderId = (savedMessage.sender?._id || savedMessage.sender || fallbackUser.id).toString();
+  const senderName = savedMessage.sender?.name || fallbackUser.name;
+  return {
+    _id: savedMessage._id.toString(),
+    chatId,
+    requestId,
+    sender: { _id: senderId, name: senderName },
+    content: savedMessage.content,
+    messageType: savedMessage.messageType || 'text',
+    fileUrl: savedMessage.fileUrl || null,
+    isRead: Boolean(savedMessage.isRead),
+    createdAt: savedMessage.createdAt
+  };
+};
+
+const emitToChatParticipants = (req, chat, event, payload) => {
+  const io = req.app.get('io');
+  if (!io) return;
+
+  const requestNamespace = io.of('/requests');
+  const roomTargets = new Set([`request_${chat._id.toString()}`]);
+  if (chat.serviceRequest) {
+    roomTargets.add(`request_${chat.serviceRequest.toString()}`);
+  }
+  for (const participant of chat.participants) {
+    if (participant) {
+      roomTargets.add(`user_${participant.toString()}`);
+    }
+  }
+
+  let emitter = requestNamespace;
+  for (const room of roomTargets) {
+    emitter = emitter.to(room);
+  }
+  emitter.emit(event, payload);
+};
+
+const persistAndBroadcastMessage = async ({ req, chat, content, messageType = 'text', fileUrl = null }) => {
+  const userId = req.user.id;
+  const message = await chat.addMessage(userId, content.trim(), messageType, fileUrl || null);
+  const populatedChat = await Chat.findById(chat._id).populate('messages.sender', 'name');
+  const savedMessage = populatedChat?.messages?.id(message._id) || message;
+
+  const socketPayload = formatChatSocketPayload(chat, savedMessage, req.user);
+  emitToChatParticipants(req, chat, 'new-message', socketPayload);
+  return savedMessage;
+};
+
+const resolveOrCreateRequestChat = async (serviceRequestId, userId, populate = false) => {
+  if (!mongoose.Types.ObjectId.isValid(serviceRequestId)) {
+    return { status: 400, message: 'Invalid conversation identifier' };
+  }
+
+  // First check if this identifier actually refers to an existing direct chat or request chat
+  const existingDirect = await Chat.findOne({
+    _id: serviceRequestId,
+    isDirectChat: true,
+    isActive: true
+  });
+  if (existingDirect) {
+    if (!isChatParticipant(existingDirect, userId)) {
+      return { status: 403, message: 'Access denied' };
+    }
+    if (populate) {
+      await existingDirect.populate([
+        { path: 'customer', select: 'name email phone' },
+        { path: 'mechanic', select: 'name email phone' },
+        { path: 'messages.sender', select: 'name' }
+      ]);
+    }
+    return { chat: existingDirect };
+  }
+
+  const serviceRequest = await ServiceRequest.findById(serviceRequestId);
+  if (!serviceRequest) {
+    return { status: 404, message: 'Service request not found' };
+  }
+
+  const customerId = serviceRequest.customerId || serviceRequest.customer;
+  const mechanicId = serviceRequest.mechanicId || serviceRequest.mechanic;
+  const isCustomer = customerId?.toString() === userId.toString();
+  const isMechanic = mechanicId?.toString() === userId.toString();
+
+  if (!isCustomer && !isMechanic) {
+    return { status: 403, message: 'Access denied' };
+  }
+
+  if (!mechanicId) {
+    return { status: 400, message: 'Chat is available once a mechanic is assigned to this request' };
+  }
+
+  let chat = await Chat.findOne({
+    serviceRequest: serviceRequestId,
+    isActive: true
+  });
+
+  if (!chat) {
+    chat = new Chat({
+      participants: [customerId, mechanicId].filter(Boolean),
+      serviceRequest: serviceRequestId,
+      customer: customerId,
+      mechanic: mechanicId,
+      messages: []
+    });
+    await chat.save();
+  }
+
+  if (populate) {
+    chat = await Chat.findById(chat._id)
+      .populate('customer', 'name email phone')
+      .populate('mechanic', 'name email phone')
+      .populate('serviceRequest', 'issueType description status')
+      .populate('messages.sender', 'name');
+  }
+
+  return { chat };
+};
 
 /**
  * @swagger
@@ -99,9 +236,10 @@ const getConversations = async (req, res) => {
 
     // Add unread count for each conversation
     const conversationsWithUnreadCount = conversations.map(chat => {
-      const unreadCount = chat.messages.filter(msg => 
-        !msg.isRead && msg.sender._id.toString() !== userId
-      ).length;
+      const unreadCount = chat.messages.filter(msg => {
+        const senderId = msg.sender?._id || msg.sender;
+        return !msg.isRead && senderId && senderId.toString() !== userId.toString();
+      }).length;
       
       return {
         ...chat.toObject(),
@@ -153,77 +291,18 @@ const getOrCreateConversation = async (req, res) => {
     const userId = req.user.id;
     const { serviceRequestId } = req.params;
 
-    // First check if this is a direct chat (the param is actually a chatId)
-    const directChat = await Chat.findOne({
-      _id: serviceRequestId,
-      isDirectChat: true,
-      isActive: true
-    })
-      .populate('customer', 'name email phone')
-      .populate('mechanic', 'name email phone')
-      .populate('messages.sender', 'name');
-
-    if (directChat) {
-      if (!directChat.participants.some(p => p.toString() === userId.toString())) {
-        return sendErrorResponse(res, 403, 'Access denied');
-      }
-      await directChat.markAsRead(userId);
-      return sendSuccessResponse(res, 200, 'Chat conversation retrieved successfully', directChat);
+    const result = await resolveOrCreateRequestChat(serviceRequestId, userId, true);
+    if (result.status) {
+      return sendErrorResponse(res, result.status, result.message);
     }
 
-    // Otherwise, treat as a real service request chat
-    const serviceRequest = await ServiceRequest.findById(serviceRequestId);
-    if (!serviceRequest) {
-      return sendErrorResponse(res, 404, 'Service request not found');
-    }
-
-    // Check if user is authorized to access this chat
-    const isCustomer = (serviceRequest.customerId || serviceRequest.customer)?.toString() === userId;
-    const isMechanic = (serviceRequest.mechanicId || serviceRequest.mechanic)?.toString() === userId;
-    
-    if (!isCustomer && !isMechanic) {
-      return sendErrorResponse(res, 403, 'Access denied');
-    }
-
-    // Find existing chat or create new one
-    let chat = await Chat.findOne({
-      serviceRequest: serviceRequestId,
-      isActive: true
-    })
-    .populate('customer', 'name email phone')
-    .populate('mechanic', 'name email phone')
-    .populate('serviceRequest', 'issueType description status')
-    .populate('messages.sender', 'name');
-
-    if (!chat) {
-      const customerId = serviceRequest.customerId || serviceRequest.customer;
-      const mechanicId = serviceRequest.mechanicId || serviceRequest.mechanic;
-      // Create new chat conversation
-      chat = new Chat({
-        participants: [customerId, mechanicId].filter(Boolean),
-        serviceRequest: serviceRequestId,
-        customer: customerId,
-        mechanic: mechanicId,
-        messages: []
-      });
-
-      await chat.save();
-      
-      // Populate the newly created chat
-      chat = await Chat.findById(chat._id)
-        .populate('customer', 'name email phone')
-        .populate('mechanic', 'name email phone')
-        .populate('serviceRequest', 'issueType description status')
-        .populate('messages.sender', 'name');
-    }
-
-    // Mark messages as read for the current user
+    const { chat } = result;
     await chat.markAsRead(userId);
 
-    logger.info('Chat conversation retrieved/created successfully', { 
-      userId, 
-      serviceRequestId, 
-      chatId: chat._id 
+    logger.info('Chat conversation retrieved/created successfully', {
+      userId,
+      serviceRequestId,
+      chatId: chat._id
     });
 
     return sendSuccessResponse(res, 200, 'Chat conversation retrieved successfully', chat);
@@ -282,75 +361,32 @@ const sendMessage = async (req, res) => {
     const { serviceRequestId } = req.params;
     const { content, messageType = 'text', fileUrl } = req.body;
 
-    logger.info('Attempting to send message:', {
-      userId,
-      serviceRequestId,
-      content: content ? content.substring(0, 50) + '...' : 'empty',
-      messageType
-    });
-
     if (!content || content.trim().length === 0) {
       return sendErrorResponse(res, 400, 'Message content is required');
     }
 
-    // Get or create chat conversation
-    let chat = await Chat.findOne({
-      serviceRequest: serviceRequestId,
-      isActive: true
+    const result = await resolveOrCreateRequestChat(serviceRequestId, userId, false);
+    if (result.status) {
+      return sendErrorResponse(res, result.status, result.message);
+    }
+
+    const savedMessage = await persistAndBroadcastMessage({
+      req,
+      chat: result.chat,
+      content,
+      messageType,
+      fileUrl
     });
 
-    if (!chat) {
-      logger.error('Chat conversation not found:', { serviceRequestId });
-      return sendErrorResponse(res, 404, 'Chat conversation not found');
-    }
-
-    logger.info('Found chat conversation:', { chatId: chat._id, participants: chat.participants });
-
-    // Verify user is a participant (handle both string and ObjectId comparison)
-    const isParticipant = chat.participants.some(participant => 
-      participant.toString() === userId.toString()
-    );
-    
-    if (!isParticipant) {
-      logger.error('User not a participant:', { 
-        userId, 
-        userIdType: typeof userId,
-        participants: chat.participants.map(p => ({ id: p.toString(), type: typeof p })),
-        isParticipant 
-      });
-      return sendErrorResponse(res, 403, 'Access denied');
-    }
-
-    // Add message to chat
-    logger.info('Adding message to chat...');
-    let message;
-    try {
-      message = await chat.addMessage(userId, content.trim(), messageType, fileUrl);
-      logger.info('Message added successfully:', { messageId: message._id });
-    } catch (addMessageError) {
-      logger.error('Error in addMessage:', addMessageError);
-      throw addMessageError;
-    }
-
-    // Populate sender information
-    try {
-      await message.populate('sender', 'name');
-      logger.info('Message populated successfully');
-    } catch (populateError) {
-      logger.error('Error populating message:', populateError);
-      // Continue without population rather than failing
-    }
-
-    logger.info('Message sent successfully', { 
-      userId, 
-      serviceRequestId, 
-      messageId: message._id 
+    logger.info('Message sent successfully', {
+      userId,
+      serviceRequestId,
+      messageId: savedMessage._id
     });
 
-    return sendSuccessResponse(res, 200, 'Message sent successfully', message);
+    return sendSuccessResponse(res, 200, 'Message sent successfully', savedMessage);
   } catch (error) {
     logger.error('Error sending message:', error);
-    logger.error('Error stack:', error.stack);
     return sendErrorResponse(res, 500, 'Failed to send message');
   }
 };
@@ -417,25 +453,14 @@ const getMessages = async (req, res) => {
     const skip = (page - 1) * limit;
 
     // Get chat conversation — try by serviceRequestId first, fall back to chatId (for direct chats)
-    let chat = await Chat.findOne({
-      serviceRequest: serviceRequestId,
-      isActive: true
-    });
-
-    if (!chat) {
-      // Fallback: the ID is actually the chatId (direct chat with no service request)
-      chat = await Chat.findOne({
-        _id: serviceRequestId,
-        isActive: true
-      });
-    }
+    const chat = await findChatByIdentifier(serviceRequestId);
 
     if (!chat) {
       return sendErrorResponse(res, 404, 'Chat conversation not found');
     }
 
     // Verify user is a participant (use .toString() for ObjectId comparison)
-    if (!chat.participants.some(p => p.toString() === userId.toString())) {
+    if (!isChatParticipant(chat, userId)) {
       return sendErrorResponse(res, 403, 'Access denied');
     }
 
@@ -538,22 +563,37 @@ const getMessages = async (req, res) => {
 const createDirectChat = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { mechanicId } = req.body;
+    const { mechanicId, customerId } = req.body;
 
-    if (!mechanicId) {
-      return sendErrorResponse(res, 400, 'Mechanic ID is required');
-    }
+    let resolvedCustomerId;
+    let resolvedMechanicId;
 
-    // Verify mechanic exists and is active
-    const mechanic = await User.findOne({ _id: mechanicId, role: 'mechanic', isActive: true });
-    if (!mechanic) {
-      return sendErrorResponse(res, 404, 'Mechanic not found or inactive');
+    if (req.user.role === 'mechanic') {
+      if (!customerId) {
+        return sendErrorResponse(res, 400, 'Customer ID is required');
+      }
+      const customer = await User.findOne({ _id: customerId, role: 'customer', isActive: true });
+      if (!customer) {
+        return sendErrorResponse(res, 404, 'Customer not found or inactive');
+      }
+      resolvedCustomerId = customerId;
+      resolvedMechanicId = userId;
+    } else {
+      if (!mechanicId) {
+        return sendErrorResponse(res, 400, 'Mechanic ID is required');
+      }
+      const mechanic = await User.findOne({ _id: mechanicId, role: 'mechanic', isActive: true });
+      if (!mechanic) {
+        return sendErrorResponse(res, 404, 'Mechanic not found or inactive');
+      }
+      resolvedCustomerId = userId;
+      resolvedMechanicId = mechanicId;
     }
 
     // Find existing direct chat between this customer and mechanic (NO service request)
     let chat = await Chat.findOne({
-      customer: userId,
-      mechanic: mechanicId,
+      customer: resolvedCustomerId,
+      mechanic: resolvedMechanicId,
       isDirectChat: true,
       isActive: true
     })
@@ -564,11 +604,11 @@ const createDirectChat = async (req, res) => {
     if (!chat) {
       // Create a brand-new direct-only chat (no ServiceRequest document at all)
       const newChat = new Chat({
-        participants: [userId, mechanicId],
+        participants: [resolvedCustomerId, resolvedMechanicId],
         serviceRequest: null,
         isDirectChat: true,
-        customer: userId,
-        mechanic: mechanicId,
+        customer: resolvedCustomerId,
+        mechanic: resolvedMechanicId,
         messages: []
       });
       await newChat.save();
@@ -577,9 +617,16 @@ const createDirectChat = async (req, res) => {
         .populate('customer', 'name email phone')
         .populate('mechanic', 'name email phone')
         .populate('messages.sender', 'name');
+    } else {
+      await chat.markAsRead(userId);
     }
 
-    logger.info('Direct chat ready', { userId, mechanicId, chatId: chat._id });
+    logger.info('Direct chat ready', {
+      userId,
+      customerId: resolvedCustomerId,
+      mechanicId: resolvedMechanicId,
+      chatId: chat._id
+    });
     return sendSuccessResponse(res, 200, 'Direct chat ready', chat);
   } catch (error) {
     logger.error('Error creating direct chat:', error);
@@ -592,44 +639,30 @@ const sendDirectMessage = async (req, res) => {
   try {
     const userId = req.user.id;
     const { chatId } = req.params;
-    const { content, messageType = 'text' } = req.body;
+    const { content, messageType = 'text', fileUrl } = req.body;
 
     if (!content || !content.trim()) {
       return sendErrorResponse(res, 400, 'Message content is required');
     }
 
-    const chat = await Chat.findOne({ _id: chatId, isActive: true });
+    const chat = await findChatByIdentifier(chatId);
     if (!chat) {
       return sendErrorResponse(res, 404, 'Chat not found');
     }
 
-    if (!chat.participants.map(p => p.toString()).includes(userId)) {
+    if (!isChatParticipant(chat, userId)) {
       return sendErrorResponse(res, 403, 'Access denied');
     }
 
-    const message = await chat.addMessage(userId, content.trim(), messageType);
+    const savedMessage = await persistAndBroadcastMessage({
+      req,
+      chat,
+      content,
+      messageType,
+      fileUrl
+    });
 
-    const populatedChat = await Chat.findById(chat._id).populate('messages.sender', 'name');
-    const savedMessage = populatedChat.messages.id(message._id);
-
-    // Emit to socket room so both sides receive the message live
-    // Socket server uses 'request_${id}' room naming convention
-    const io = req.app.get('io');
-    if (io) {
-      const requestNamespace = io.of('/requests');
-      requestNamespace.to(`request_${chatId}`).emit('new-message', {
-        _id: message._id,
-        chatId,
-        requestId: chatId,
-        sender: { _id: userId, name: req.user.name },
-        content: content.trim(),
-        messageType,
-        createdAt: message.createdAt,
-        isRead: false
-      });
-    }
-
-    logger.info('Direct message sent', { userId, chatId, messageId: message._id });
+    logger.info('Direct message sent', { userId, chatId, messageId: savedMessage._id });
     return sendSuccessResponse(res, 200, 'Message sent successfully', savedMessage);
   } catch (error) {
     logger.error('Error sending direct message:', error);
@@ -672,17 +705,12 @@ const markAsRead = async (req, res) => {
     const userId = req.user.id;
     const { serviceRequestId } = req.params;
 
-    // Support serviceRequest-based and chatId-based lookup
-    let chat = await Chat.findOne({ serviceRequest: serviceRequestId, isActive: true });
-    if (!chat) {
-      chat = await Chat.findOne({ _id: serviceRequestId, isActive: true });
-    }
-
+    const chat = await findChatByIdentifier(serviceRequestId);
     if (!chat) {
       return sendErrorResponse(res, 404, 'Chat conversation not found');
     }
 
-    if (!chat.participants.map(p => p.toString()).includes(userId)) {
+    if (!isChatParticipant(chat, userId)) {
       return sendErrorResponse(res, 403, 'Access denied');
     }
 
@@ -702,17 +730,12 @@ const deleteChat = async (req, res) => {
     const userId = req.user.id;
     const { chatId } = req.params;
 
-    // Support both chatId and serviceRequestId
-    let chat = await Chat.findOne({ _id: chatId, isActive: true });
-    if (!chat) {
-      chat = await Chat.findOne({ serviceRequest: chatId, isActive: true });
-    }
-
+    const chat = await findChatByIdentifier(chatId);
     if (!chat) {
       return sendErrorResponse(res, 404, 'Chat not found');
     }
 
-    if (!chat.participants.map(p => p.toString()).includes(userId)) {
+    if (!isChatParticipant(chat, userId)) {
       return sendErrorResponse(res, 403, 'Access denied');
     }
 
@@ -721,11 +744,40 @@ const deleteChat = async (req, res) => {
     chat.lastMessage = undefined;
     await chat.save();
 
+    emitToChatParticipants(req, chat, 'chat-cleared', {
+      chatId: chat._id.toString(),
+      requestId: chat.serviceRequest ? chat.serviceRequest.toString() : chat._id.toString()
+    });
+
     logger.info('Chat messages deleted', { userId, chatId });
     return sendSuccessResponse(res, 200, 'Chat cleared successfully', {});
   } catch (error) {
     logger.error('Error deleting chat:', error);
     return sendErrorResponse(res, 500, 'Failed to delete chat');
+  }
+};
+
+const uploadChatAttachment = async (req, res) => {
+  try {
+    if (!req.file || !req.file.url) {
+      return sendErrorResponse(res, 400, 'No attachment file provided');
+    }
+
+    const rawUrl = req.file.url;
+    const fileUrl = rawUrl.startsWith('/')
+      ? `${req.protocol}://${req.get('host')}${rawUrl}`
+      : rawUrl;
+    const messageType = req.file.mimetype.startsWith('image/') ? 'image' : 'file';
+
+    return sendSuccessResponse(res, 200, 'Attachment uploaded successfully', {
+      url: fileUrl,
+      fileName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      messageType
+    });
+  } catch (error) {
+    logger.error('Error uploading chat attachment:', error);
+    return sendErrorResponse(res, 500, 'Failed to upload attachment');
   }
 };
 
@@ -737,5 +789,6 @@ module.exports = {
   markAsRead,
   createDirectChat,
   sendDirectMessage,
-  deleteChat
+  deleteChat,
+  uploadChatAttachment
 };

@@ -3,6 +3,7 @@ const router = express.Router();
 const chatController = require('../controllers/chatController');
 const { authenticateToken } = require('../middlewares/authMiddleware');
 const { validate, schemas } = require('../middlewares/validationMiddleware');
+const uploadMiddleware = require('../middlewares/uploadMiddleware');
 
 // Apply authentication to all chat routes
 router.use(authenticateToken);
@@ -12,8 +13,11 @@ router.get('/conversations', chatController.getConversations);
 router.get('/conversations/:serviceRequestId', chatController.getOrCreateConversation);
 
 // Direct chat routes (no service request created)
-router.post('/direct-chat', chatController.createDirectChat);
-router.post('/direct-chat/:chatId/messages', chatController.sendDirectMessage);
+router.post('/direct-chat', validate(schemas.createDirectChat), chatController.createDirectChat);
+router.post('/direct-chat/:chatId/messages', validate(schemas.sendMessage), chatController.sendDirectMessage);
+
+// Attachment upload route
+router.post('/upload', uploadMiddleware.chatAttachment, chatController.uploadChatAttachment);
 
 // Delete chat route (clears all messages for all participants)
 router.delete('/delete/:chatId', chatController.deleteChat);

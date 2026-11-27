@@ -4,7 +4,17 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const ChatMessage = ({ message }) => {
   const { user } = useAuth();
-  const isOwnMessage = message.sender._id === user.id;
+  const currentUserId = user?.id || user?._id;
+  const senderId = message?.sender?._id || message?.sender?.id || message?.sender;
+  const isOwnMessage = Boolean(
+    currentUserId && senderId && senderId.toString() === currentUserId.toString()
+  );
+  const senderName = message?.sender?.name || (isOwnMessage ? user?.name : 'Unknown') || 'Unknown';
+  const createdAtDate = message?.createdAt ? new Date(message.createdAt) : null;
+  const formattedTime =
+    createdAtDate && !Number.isNaN(createdAtDate.getTime())
+      ? formatDistanceToNow(createdAtDate, { addSuffix: true })
+      : '';
 
   const renderMessageContent = () => {
     if (message.messageType === 'image') {
@@ -60,9 +70,13 @@ const ChatMessage = ({ message }) => {
         <div className={`flex items-center gap-2 mt-1 text-xs text-secondary-500 ${
           isOwnMessage ? 'justify-end' : 'justify-start'
         }`}>
-          <span>{message.sender.name}</span>
-          <span>•</span>
-          <span>{formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}</span>
+          <span>{senderName}</span>
+          {formattedTime && (
+            <>
+              <span>•</span>
+              <span>{formattedTime}</span>
+            </>
+          )}
           {isOwnMessage && (
             <>
               <span>•</span>

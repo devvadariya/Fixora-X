@@ -15,6 +15,8 @@ import {
   Popup,
   TileLayer,
 } from "react-leaflet";
+import chatApi from "../../api/chatApi";
+import { useAuth } from "../../contexts/AuthContext";
 import requestService from "../../services/requestService";
 import socketService from "../../services/socketService";
 import { REQUEST_STATUS_LABELS } from "../../utils/constants";
@@ -51,6 +53,9 @@ const RequestTracker = ({ request, onStatusUpdate, onNewMessage }) => {
   const [showChat, setShowChat] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const { user } = useAuth();
+  const currentUserId = user?.id || user?._id;
 
   const mechanic = request.mechanic || request.mechanicId;
 
@@ -88,7 +93,7 @@ const RequestTracker = ({ request, onStatusUpdate, onNewMessage }) => {
       socketService.joinRequest(request._id);
 
       // Listen for mechanic location updates
-      socketService.onLocationUpdate((data) => {
+      const handleLocationUpdate = (data) => {
         if (data.mechanicId === request.mechanicId) {
           setMechanicLocation({
             lat: data.lat,
@@ -101,10 +106,10 @@ const RequestTracker = ({ request, onStatusUpdate, onNewMessage }) => {
             setEstimatedArrival(data.estimatedArrival);
           }
         }
-      });
+      };
 
       // Listen for request status updates
-      socketService.onRequestUpdate((data) => {
+      const handleRequestUpdate = (data) => {
         if (data.requestId === request._id) {
           if (onStatusUpdate) {
             onStatusUpdate(data);
@@ -123,31 +128,64 @@ const RequestTracker = ({ request, onStatusUpdate, onNewMessage }) => {
             toast.success(statusMessages[data.status]);
           }
         }
-      });
+      };
 
       // Listen for new messages
-      socketService.onNewMessage((data) => {
-        if (data.requestId === request._id) {
-          setMessages((prev) => [...prev, data]);
+      const handleNewMessage = (data) => {
+        if (data.requestId === request._id || data.chatId === request._id) {
+          setMessages((prev) => {
+            if (data._id && prev.some((m) => m._id === data._id)) return prev;
+            return [...prev, data];
+          });
           if (onNewMessage) {
             onNewMessage(data);
           }
 
-          // Show notification for new messages
-          if (data.sender !== "customer") {
-            toast.info(`New message from ${data.sender}`);
+          const senderId = data?.sender?._id || data?.sender?.id || data?.sender;
+          const isFromSelf =
+            currentUserId &&
+            senderId &&
+            senderId.toString() === currentUserId.toString();
+          if (!isFromSelf) {
+            const senderLabel = data?.sender?.name || "Mechanic";
+            toast(`New message from ${senderLabel}`);
           }
         }
-      });
+      };
+
+      socketService.onLocationUpdate(handleLocationUpdate);
+      socketService.onRequestUpdate(handleRequestUpdate);
+      socketService.onNewMessage(handleNewMessage);
 
       return () => {
         socketService.leaveRequest(request._id);
-        socketService.off("location_updated");
-        socketService.off("request_updated");
-        socketService.off("new_message");
+        socketService.off("location_updated", handleLocationUpdate);
+        socketService.off("request_updated", handleRequestUpdate);
+        socketService.off("new-message", handleNewMessage);
       };
     }
-  }, [request._id, request.mechanicId, onStatusUpdate, onNewMessage]);
+  }, [request._id, request.mechanicId, currentUserId, onStatusUpdate, onNewMessage]);
+
+  // Load persisted messages when opening tracker chat
+  useEffect(() => {
+    if (!showChat || !mechanic || !request._id) return undefined;
+
+    let cancelled = false;
+    chatApi
+      .getOrCreateConversation(request._id)
+      .then((response) => {
+        if (!cancelled && response?.success && response.data) {
+          setMessages(response.data.messages || []);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load tracker chat history:", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showChat, mechanic, request._id]);
 
   // Calculate estimated arrival time
   const getEstimatedArrival = () => {
@@ -157,20 +195,29 @@ const RequestTracker = ({ request, onStatusUpdate, onNewMessage }) => {
     return null;
   };
 
-  // Send chat message
-  const handleSendMessage = () => {
-    if (newMessage.trim() && request._id) {
-      socketService.sendMessage(request._id, newMessage.trim(), "customer");
-      setMessages((prev) => [
-        ...prev,
-        {
-          requestId: request._id,
-          message: newMessage.trim(),
-          sender: "customer",
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-      setNewMessage("");
+  // Send chat message via persisted REST pipeline
+  const handleSendMessage = async () => {
+    const text = newMessage.trim();
+    if (!text || !request._id || sendingMessage) return;
+
+    setNewMessage("");
+    try {
+      setSendingMessage(true);
+      const response = await chatApi.sendMessage(request._id, {
+        content: text,
+        messageType: "text",
+      });
+      if (response.success && response.data) {
+        setMessages((prev) => {
+          if (prev.some((m) => m._id === response.data._id)) return prev;
+          return [...prev, response.data];
+        });
+      }
+    } catch (error) {
+      setNewMessage(text);
+      toast.error(error?.message || "Failed to send message");
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -420,31 +467,45 @@ const RequestTracker = ({ request, onStatusUpdate, onNewMessage }) => {
               </p>
             ) : (
               <div className="space-y-3">
-                {messages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={`flex ${message.sender === "customer" ? "justify-end" : "justify-start"}`}
-                  >
+                {messages.map((message, index) => {
+                  const senderId =
+                    message?.sender?._id ||
+                    message?.sender?.id ||
+                    message?.sender;
+                  const isOwn = Boolean(
+                    (currentUserId &&
+                      senderId &&
+                      senderId.toString() === currentUserId.toString()) ||
+                      message.sender === "customer",
+                  );
+                  const text = message.content ?? message.message;
+                  const ts = message.createdAt ?? message.timestamp;
+                  return (
                     <div
-                      className={`max-w-xs px-4 py-2 rounded-lg ${
-                        message.sender === "customer"
-                          ? "bg-primary-600 text-white"
-                          : "bg-secondary-100 text-secondary-900"
-                      }`}
+                      key={message._id || index}
+                      className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
                     >
-                      <p className="text-sm">{message.message}</p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          message.sender === "customer"
-                            ? "text-primary-100"
-                            : "text-secondary-500"
+                      <div
+                        className={`max-w-xs px-4 py-2 rounded-lg ${
+                          isOwn
+                            ? "bg-primary-600 text-white"
+                            : "bg-secondary-100 text-secondary-900"
                         }`}
                       >
-                        {formatTime(message.timestamp)}
-                      </p>
+                        <p className="text-sm">{text}</p>
+                        {ts && (
+                          <p
+                            className={`text-xs mt-1 ${
+                              isOwn ? "text-primary-100" : "text-secondary-500"
+                            }`}
+                          >
+                            {formatTime(ts)}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

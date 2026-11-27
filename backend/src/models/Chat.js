@@ -84,7 +84,7 @@ chatSchema.virtual('unreadCount').get(function() {
 // Method to mark messages as read
 chatSchema.methods.markAsRead = async function(userId) {
   const unreadMessages = this.messages.filter(msg => 
-    !msg.isRead && msg.sender.toString() !== userId.toString()
+    !msg.isRead && msg.sender && msg.sender.toString() !== userId.toString()
   );
   
   if (unreadMessages.length > 0) {
@@ -101,22 +101,19 @@ chatSchema.methods.markAsRead = async function(userId) {
 // Method to add a new message
 chatSchema.methods.addMessage = async function(senderId, content, messageType = 'text', fileUrl = null) {
   try {
-    const message = {
+    const newMessage = this.messages.create({
       sender: senderId,
       content,
       messageType,
       fileUrl,
       isRead: false
-    };
-    
-    this.messages.push(message);
+    });
+
+    this.messages.push(newMessage);
+    this.lastMessage = newMessage._id;
     await this.save();
-    
-    // Set lastMessage after saving (when the message has an _id)
-    this.lastMessage = this.messages[this.messages.length - 1]._id;
-    await this.save();
-    
-    return this.messages[this.messages.length - 1];
+
+    return this.messages.id(newMessage._id) || this.messages[this.messages.length - 1];
   } catch (error) {
     console.error('Error in addMessage method:', error);
     throw error;

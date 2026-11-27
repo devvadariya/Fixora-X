@@ -1,4 +1,34 @@
+const jwt = require('jsonwebtoken');
 const logger = require('../config/logger');
+const User = require('../models/User');
+const Chat = require('../models/Chat');
+const ServiceRequest = require('../models/ServiceRequest');
+
+/**
+ * Check whether an authenticated user may join a service-request or chat room.
+ */
+const canJoinRequestOrChatRoom = async (roomId, user) => {
+  if (!roomId || !user) return false;
+  if (user.role === 'admin') return true;
+
+  const chat = await Chat.findOne({
+    $or: [{ _id: roomId }, { serviceRequest: roomId }],
+    isActive: true
+  }).select('participants');
+
+  if (chat) {
+    return chat.participants.some((participant) => participant.toString() === user.id);
+  }
+
+  const serviceRequest = await ServiceRequest.findById(roomId).select('customerId mechanicId status');
+  if (!serviceRequest) return false;
+
+  if (serviceRequest.customerId?.toString() === user.id) return true;
+  if (serviceRequest.mechanicId?.toString() === user.id) return true;
+
+  // Mechanics may monitor pending/offered requests while deciding whether to accept
+  return user.role === 'mechanic' && ['pending', 'offered'].includes(serviceRequest.status);
+};
 
 /**
  * Initialize Socket.IO for real-time service request updates
@@ -8,20 +38,48 @@ const initializeRequestSocket = (io) => {
   // Namespace for service requests
   const requestNamespace = io.of('/requests');
 
+  requestNamespace.use(async (socket, next) => {
+    try {
+      const token = socket.handshake.auth?.token;
+      if (!token) {
+        return next(new Error('Authentication required'));
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select('name role isActive');
+      if (!user || !user.isActive) {
+        return next(new Error('Authentication failed'));
+      }
+
+      socket.user = {
+        id: user._id.toString(),
+        name: user.name,
+        role: user.role
+      };
+      return next();
+    } catch (error) {
+      return next(new Error('Invalid authentication token'));
+    }
+  });
+
   requestNamespace.on('connection', (socket) => {
     logger.info(`Client connected to requests namespace: ${socket.id}`);
+    if (socket.user?.id) {
+      socket.join(`user_${socket.user.id}`);
+    }
 
-    // Join user to their personal room
+    // Join user to their personal room (must match authenticated socket user)
     socket.on('join-user-room', (userId) => {
-      if (userId) {
-        socket.join(`user_${userId}`);
-        logger.info(`User ${userId} joined their room`);
+      const targetUserId = userId || socket.user?.id;
+      if (targetUserId && targetUserId.toString() === socket.user?.id) {
+        socket.join(`user_${targetUserId}`);
+        logger.info(`User ${targetUserId} joined their room`);
       }
     });
 
     // Join mechanic to their service area
     socket.on('join-mechanic-area', (mechanicId, location) => {
-      if (mechanicId && location) {
+      if (mechanicId && location && socket.user?.role === 'mechanic' && mechanicId.toString() === socket.user.id) {
         socket.join(`mechanic_${mechanicId}`);
         socket.join('available_mechanics');
         logger.info(`Mechanic ${mechanicId} joined service area`);
@@ -32,18 +90,27 @@ const initializeRequestSocket = (io) => {
       }
     });
 
-    // Join request room
-    socket.on('join_request', (data) => {
-      const { requestId } = data;
-      if (requestId) {
+    // Join request / chat room
+    socket.on('join_request', async (data) => {
+      const requestId = data?.requestId;
+      if (!requestId) return;
+
+      try {
+        const allowed = await canJoinRequestOrChatRoom(requestId, socket.user);
+        if (!allowed) {
+          logger.warn('Unauthorized room join attempt blocked', { userId: socket.user?.id, requestId });
+          return;
+        }
         socket.join(`request_${requestId}`);
         logger.info(`Client joined request room: ${requestId}`);
+      } catch (error) {
+        logger.error('Error joining request room:', error);
       }
     });
 
-    // Leave request room
+    // Leave request / chat room
     socket.on('leave_request', (data) => {
-      const { requestId } = data;
+      const requestId = data?.requestId;
       if (requestId) {
         socket.leave(`request_${requestId}`);
         logger.info(`Client left request room: ${requestId}`);
@@ -156,16 +223,34 @@ const initializeRequestSocket = (io) => {
       });
     });
 
-    // Handle chat messages
-    socket.on('send-message', (data) => {
-      const { requestId, senderId, message, messageType } = data;
-      
-      requestNamespace.to(`request_${requestId}`).emit('new-message', {
-        senderId,
-        message,
-        messageType,
-        timestamp: new Date()
-      });
+    // Handle chat messages emitted directly over socket (normalized to canonical message shape)
+    socket.on('send-message', async (data) => {
+      const targetId = data?.chatId || data?.requestId;
+      const text = (data?.content || data?.message || '').trim();
+      if (!targetId || !text) return;
+
+      try {
+        const allowed = await canJoinRequestOrChatRoom(targetId, socket.user);
+        if (!allowed) return;
+
+        const now = new Date();
+        requestNamespace.to(`request_${targetId}`).emit('new-message', {
+          _id: data._id || `sock-${now.getTime()}`,
+          chatId: data.chatId || targetId,
+          requestId: data.requestId || targetId,
+          sender: {
+            _id: socket.user?.id,
+            name: socket.user?.name || 'User'
+          },
+          content: text,
+          messageType: data.messageType || 'text',
+          fileUrl: data.fileUrl || null,
+          isRead: false,
+          createdAt: now
+        });
+      } catch (error) {
+        logger.error('Error handling socket send-message:', error);
+      }
     });
 
     // Handle emergency alerts

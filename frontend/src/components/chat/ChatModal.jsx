@@ -16,7 +16,9 @@ const ChatModal = ({ isOpen, onClose, mechanic, serviceRequestId = null }) => {
   const [sending, setSending] = useState(false);
   const [chatId, setChatId] = useState(null); // direct chat id (no service request)
   const messagesEndRef = useRef(null);
+  const activeRoomRef = useRef(null);
   const { user } = useAuth();
+  const currentUserId = user?.id || user?._id;
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -30,39 +32,94 @@ const ChatModal = ({ isOpen, onClose, mechanic, serviceRequestId = null }) => {
   }, [isOpen, onClose]);
 
   useEffect(() => {
-    if (isOpen && mechanic) {
-      initializeChat();
+    if (!isOpen || !mechanic) {
+      setChatId(null);
+      setMessages([]);
+      setNewMessage("");
+      return undefined;
     }
-    return () => {
-      // Cleanup: leave socket room when modal closes
-      if (chatId) {
-        socketService.leaveRequest(chatId);
-        socketService.off("new-message");
+
+    let cancelled = false;
+    setChatId(null);
+    setMessages([]);
+
+    const handleNewMessage = (data) => {
+      const roomId = activeRoomRef.current;
+      if (!roomId) return;
+      if (data.chatId === roomId || data.requestId === roomId) {
+        setMessages((prev) => {
+          if (data._id && prev.some((m) => m._id === data._id)) return prev;
+          return [...prev, data];
+        });
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    const handleChatCleared = (data) => {
+      const roomId = activeRoomRef.current;
+      if (!roomId) return;
+      if (data.chatId === roomId || data.requestId === roomId) {
+        setMessages([]);
+      }
+    };
+
+    const init = async () => {
+      try {
+        setLoading(true);
+        if (serviceRequestId) {
+          const response =
+            await chatApi.getOrCreateConversation(serviceRequestId);
+          if (cancelled) return;
+          if (response.success) {
+            setMessages(response.data.messages || []);
+            activeRoomRef.current = serviceRequestId;
+            socketService.joinRequest(serviceRequestId);
+            socketService.onNewMessage(handleNewMessage);
+            socketService.onChatCleared(handleChatCleared);
+          }
+        } else {
+          const response = await chatApi.createDirectChat(mechanic._id);
+          if (cancelled) return;
+          if (response.success) {
+            const chat = response.data;
+            setChatId(chat._id);
+            setMessages(chat.messages || []);
+            activeRoomRef.current = chat._id;
+            socketService.joinRequest(chat._id);
+            socketService.onNewMessage(handleNewMessage);
+            socketService.onChatCleared(handleChatCleared);
+          } else {
+            toast.error("Could not start chat. Please try again.");
+          }
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Error initializing chat:", error);
+          toast.error("Failed to load chat. Please try again.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    init();
+
+    return () => {
+      cancelled = true;
+      socketService.off("new-message", handleNewMessage);
+      socketService.off("chat-cleared", handleChatCleared);
+      if (activeRoomRef.current) {
+        socketService.leaveRequest(activeRoomRef.current);
+        activeRoomRef.current = null;
+      }
+    };
   }, [isOpen, mechanic, serviceRequestId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const setupSocketListeners = (roomId) => {
-    socketService.joinRequest(roomId);
-    socketService.onNewMessage((data) => {
-      const incomingRoom = data.chatId || data.requestId;
-      if (incomingRoom === roomId) {
-        setMessages((prev) => {
-          // Avoid duplicates
-          if (prev.some((m) => m._id && m._id === data._id)) return prev;
-          return [...prev, data];
-        });
-      }
-    });
-  };
-
   const deleteChat = async () => {
-    const id = chatId || serviceRequestId;
+    const id = serviceRequestId ? serviceRequestId : chatId;
     if (!id) return;
     if (
       !window.confirm(
@@ -79,38 +136,6 @@ const ChatModal = ({ isOpen, onClose, mechanic, serviceRequestId = null }) => {
     }
   };
 
-  const initializeChat = async () => {
-    try {
-      setLoading(true);
-
-      if (serviceRequestId) {
-        // Tied to a real service request
-        const response =
-          await chatApi.getOrCreateConversation(serviceRequestId);
-        if (response.success) {
-          setMessages(response.data.messages || []);
-          setupSocketListeners(serviceRequestId);
-        }
-      } else {
-        // Pure direct chat — no service request at all
-        const response = await chatApi.createDirectChat(mechanic._id);
-        if (response.success) {
-          const chat = response.data;
-          setChatId(chat._id);
-          setMessages(chat.messages || []);
-          setupSocketListeners(chat._id);
-        } else {
-          toast.error("Could not start chat. Please try again.");
-        }
-      }
-    } catch (error) {
-      console.error("Error initializing chat:", error);
-      toast.error("Failed to load chat. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -121,7 +146,7 @@ const ChatModal = ({ isOpen, onClose, mechanic, serviceRequestId = null }) => {
     // Optimistically add the message to UI
     const tempMsg = {
       _id: `temp-${Date.now()}`,
-      sender: { _id: user.id, name: user.name },
+      sender: { _id: currentUserId, name: user?.name || "You" },
       content,
       createdAt: new Date().toISOString(),
       isRead: false,
@@ -130,43 +155,33 @@ const ChatModal = ({ isOpen, onClose, mechanic, serviceRequestId = null }) => {
 
     try {
       setSending(true);
+      const payload = { content, messageType: "text" };
+      const response = serviceRequestId
+        ? await chatApi.sendMessage(serviceRequestId, payload)
+        : chatId
+          ? await chatApi.sendDirectMessage(chatId, payload)
+          : null;
 
-      let response;
-      if (chatId) {
-        // Direct chat: use chatId-based endpoint (no service request)
-        response = await chatApi.sendDirectMessage(chatId, {
-          content,
-          messageType: "text",
-        });
-        if (response.success) {
-          // Replace temp with real message
-          setMessages((prev) =>
-            prev.map((m) => (m._id === tempMsg._id ? response.data : m)),
-          );
-          // Emit via socket for real-time delivery
-          socketService.sendMessage(chatId, content, user.role);
-        } else {
-          throw new Error(response.message || "Failed to send");
-        }
-      } else if (serviceRequestId) {
-        // Service-request chat
-        response = await chatApi.sendMessage(serviceRequestId, {
-          content,
-          messageType: "text",
-        });
-        if (response.success) {
-          setMessages((prev) =>
-            prev.map((m) => (m._id === tempMsg._id ? response.data : m)),
-          );
-          socketService.sendMessage(serviceRequestId, content, user.role);
-        } else {
-          throw new Error(response.message || "Failed to send");
-        }
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to send");
       }
+
+      setMessages((prev) => {
+        const replaced = prev.map((m) =>
+          m._id === tempMsg._id ? response.data : m,
+        );
+        // Guard against duplicate if socket event arrived before REST response
+        const seen = new Set();
+        return replaced.filter((m) => {
+          if (!m?._id) return true;
+          if (seen.has(m._id)) return false;
+          seen.add(m._id);
+          return true;
+        });
+      });
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error(error.message || "Failed to send message");
-      // Remove the optimistic message on failure
       setMessages((prev) => prev.filter((m) => m._id !== tempMsg._id));
     } finally {
       setSending(false);
@@ -175,8 +190,12 @@ const ChatModal = ({ isOpen, onClose, mechanic, serviceRequestId = null }) => {
 
   const isOwnMessage = (message) => {
     const senderId =
-      message.sender?._id || message.sender?.id || message.sender;
-    return senderId?.toString() === user.id?.toString();
+      message?.sender?._id || message?.sender?.id || message?.sender;
+    return Boolean(
+      currentUserId &&
+        senderId &&
+        senderId.toString() === currentUserId.toString(),
+    );
   };
 
   if (!isOpen) return null;
@@ -252,7 +271,33 @@ const ChatModal = ({ isOpen, onClose, mechanic, serviceRequestId = null }) => {
                         : "rounded-bl-sm border border-hairline bg-white text-ink shadow-soft"
                     }`}
                   >
-                    <p className="text-sm">{message.content}</p>
+                    {message.messageType === "image" && message.fileUrl ? (
+                      <div>
+                        <img
+                          src={message.fileUrl}
+                          alt={message.content || "Shared attachment"}
+                          className="max-w-full rounded-lg cursor-pointer"
+                          onClick={() => window.open(message.fileUrl, "_blank")}
+                        />
+                        {message.content && (
+                          <p className="mt-2 text-sm">{message.content}</p>
+                        )}
+                      </div>
+                    ) : message.messageType === "file" && message.fileUrl ? (
+                      <div className="space-y-1">
+                        <p className="text-sm">{message.content}</p>
+                        <a
+                          href={message.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs underline"
+                        >
+                          View attachment
+                        </a>
+                      </div>
+                    ) : (
+                      <p className="text-sm">{message.content}</p>
+                    )}
                   </div>
                   <div
                     className={`mt-1 flex items-center gap-1 text-xs text-secondary-400 ${

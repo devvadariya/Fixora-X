@@ -82,6 +82,20 @@ class ChatApi {
       throw error.response?.data || { message: 'Failed to delete chat' };
     }
   }
+
+  // Upload an image or file attachment for chat
+  async uploadAttachment(file) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await apiClient.post('/chat/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to upload attachment' };
+    }
+  }
 }
 
 const chatApi = new ChatApi();

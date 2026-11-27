@@ -270,7 +270,7 @@ const Notifications = () => {
               type="checkbox"
               checked={selectedNotifications.length === notifications.length}
               onChange={handleSelectAll}
-              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
+              className="h-4 w-4 text-primary-600 focus-visible:ring-primary-900 border-secondary-300 rounded"
             />
             <span className="text-sm text-secondary-600">Select all</span>
           </div>
@@ -305,7 +305,7 @@ const Notifications = () => {
                     type="checkbox"
                     checked={selectedNotifications.includes(notification._id)}
                     onChange={() => handleSelectNotification(notification._id)}
-                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
+                    className="mt-1 h-4 w-4 text-primary-600 focus-visible:ring-primary-900 border-secondary-300 rounded"
                   />
                   
                   <div className="flex-shrink-0">

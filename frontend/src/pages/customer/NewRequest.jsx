@@ -233,23 +233,23 @@ const NewRequest = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="rounded-2xl border border-hairline bg-white p-6 shadow-card">
         <div className="flex items-center space-x-3 mb-4">
           <div className="p-2 bg-primary-100 rounded-lg">
             <WrenchScrewdriverIcon className="h-6 w-6 text-primary-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">New Service Request</h1>
-            <p className="text-gray-600">Create a service request that will be broadcasted to mechanics within 25km</p>
+            <h1 className="text-2xl font-semibold tracking-[-0.04em] text-ink">New Service Request</h1>
+            <p className="text-secondary-600">Create a service request that will be broadcasted to mechanics within 25km</p>
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
           <div className="flex items-start space-x-3">
-            <ExclamationTriangleIcon className="h-5 w-5 text-blue-500 mt-0.5" />
+            <ExclamationTriangleIcon className="h-5 w-5 text-primary-600 mt-0.5" />
             <div>
-              <h3 className="text-sm font-medium text-blue-900">Broadcast Service Request</h3>
-              <p className="text-sm text-blue-800 mt-1">
+              <h3 className="text-sm font-medium text-primary-900">Broadcast Service Request</h3>
+              <p className="text-sm text-primary-900 mt-1">
                 Your service request will be automatically sent to all verified mechanics within 25km of your location.
                 They will be notified and can accept your request.
               </p>
@@ -259,13 +259,13 @@ const NewRequest = () => {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="rounded-2xl border border-hairline bg-white p-6 shadow-card space-y-6">
         {/* Service Information */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Service Information</h2>
+          <h2 className="text-lg font-semibold text-ink mb-4">Service Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Issue Type *
               </label>
               <Select
@@ -283,7 +283,7 @@ const NewRequest = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Urgency Level
               </label>
               <Select
@@ -300,14 +300,14 @@ const NewRequest = () => {
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Description *
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Describe the issue in detail..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
               rows={4}
               required
             />
@@ -316,12 +316,12 @@ const NewRequest = () => {
 
         {/* Vehicle Information */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Vehicle Information</h2>
+          <h2 className="text-lg font-semibold text-ink mb-4">Vehicle Information</h2>
 
           {/* Manual Vehicle Input */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Vehicle Type *
               </label>
               <Select
@@ -339,7 +339,7 @@ const NewRequest = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Make *
               </label>
               <Input
@@ -351,7 +351,7 @@ const NewRequest = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Model *
               </label>
               <Input
@@ -363,7 +363,7 @@ const NewRequest = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 License Plate *
               </label>
               <Input
@@ -375,7 +375,7 @@ const NewRequest = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Year *
               </label>
               <Input
@@ -390,7 +390,7 @@ const NewRequest = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Color
               </label>
               <Input
@@ -404,7 +404,7 @@ const NewRequest = () => {
 
         {/* Location */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Service Location</h2>
+          <h2 className="text-lg font-semibold text-ink mb-4">Service Location</h2>
           <div className="space-y-4">
             <MapLocationPicker
               onLocationSelect={handleLocationSelect}
@@ -412,14 +412,14 @@ const NewRequest = () => {
               placeholder="Select service location"
             />
             {formData.location.address && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-secondary-600">
                 <MapPinIcon className="h-4 w-4" />
                 <span>{formData.location.address}</span>
               </div>
             )}
             {/* Debug info */}
             {process.env.NODE_ENV === 'development' && (
-              <div className="p-2 bg-gray-100 rounded text-xs">
+              <div className="p-2 bg-surface rounded text-xs">
                 <strong>Debug:</strong> Location selected: {formData.location.address ? 'Yes' : 'No'}
               </div>
             )}
@@ -427,20 +427,20 @@ const NewRequest = () => {
         </div>
 
         {/* Additional Details */}
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Pricing & Timing</h2>
+          <h2 className="text-lg font-semibold text-ink mb-4">Pricing & Timing</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Estimated Base Price (₹)
               </label>
-              <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 font-medium">
+              <div className="w-full px-3 py-2 bg-surface border border-hairline rounded-md text-secondary-700 font-medium">
                 {formData.issueType ? (DEFAULT_PRICES[formData.issueType] || DEFAULT_PRICES.other) : 'Select issue type'}
               </div>
-              <p className="text-xs text-gray-500 mt-1">Standard rate for this category</p>
+              <p className="text-xs text-secondary-500 mt-1">Standard rate for this category</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Your Expected Price (₹) *
               </label>
               <Input
@@ -451,11 +451,11 @@ const NewRequest = () => {
                 min="0"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">What you expect to pay</p>
+              <p className="text-xs text-secondary-500 mt-1">What you expect to pay</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Preferred Time (Optional)
               </label>
               <Input
@@ -468,10 +468,10 @@ const NewRequest = () => {
 
         {/* Images */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Images (Optional)</h2>
+          <h2 className="text-lg font-semibold text-ink mb-4">Images (Optional)</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 Upload Images
               </label>
               <input
@@ -479,9 +479,9 @@ const NewRequest = () => {
                 multiple
                 accept="image/*"
                 onChange={handleImageUpload}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-secondary-500 mt-1">
                 Upload images of the issue (max 5MB each, up to 5 images)
               </p>
             </div>
@@ -498,7 +498,7 @@ const NewRequest = () => {
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                      className="absolute -top-2 -right-2 bg-danger-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
                     >
                       ×
                     </button>

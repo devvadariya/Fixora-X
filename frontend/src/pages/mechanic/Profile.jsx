@@ -1,21 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  WrenchScrewdriverIcon,
-  StarIcon,
+import {
+  CameraIcon,
+  CheckCircleIcon,
   ClockIcon,
   CurrencyDollarIcon,
-  CheckCircleIcon,
-  XCircleIcon,
   PencilIcon,
-  CameraIcon
-} from '@heroicons/react/24/outline';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
+  StarIcon,
+  WrenchScrewdriverIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
+import { useEffect, useState } from "react";
+import Button from "../../components/common/Button";
+import Card from "../../components/common/Card";
+import Input from "../../components/common/Input";
+import MechanicSurface from "../../components/mechanic/MechanicSurface";
 
-import mechanicApi from '../../api/mechanicApi';
-import { useAuth } from '../../contexts/AuthContext';
-import { formatCurrency } from '../../utils/helpers';
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
+import mechanicApi from "../../api/mechanicApi";
+import { useAuth } from "../../contexts/AuthContext";
+import { formatCurrency } from "../../utils/helpers";
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
@@ -25,24 +27,24 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    shopName: '',
+    name: "",
+    phone: "",
+    shopName: "",
     shopAddress: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      country: ''
+      street: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "",
     },
     specializations: [],
-    experience: '',
-    bio: '',
+    experience: "",
+    bio: "",
     workingHours: {
-      start: '09:00',
-      end: '18:00'
+      start: "09:00",
+      end: "18:00",
     },
-    serviceRadius: 10
+    serviceRadius: 10,
   });
 
   useEffect(() => {
@@ -54,28 +56,28 @@ const Profile = () => {
       setLoading(true);
       const [profileResponse, statsResponse] = await Promise.all([
         mechanicApi.getProfile(),
-        mechanicApi.getStats()
+        mechanicApi.getStats(),
       ]);
 
       if (profileResponse.success) {
         const pData = profileResponse.data.profile || profileResponse.data;
         setProfile(pData);
         setFormData({
-          name: pData.name || '',
-          phone: pData.phone || '',
-          shopName: pData.shopName || '',
+          name: pData.name || "",
+          phone: pData.phone || "",
+          shopName: pData.shopName || "",
           shopAddress: pData.shopAddress || {
-            street: '',
-            city: '',
-            state: '',
-            zipCode: '',
-            country: ''
+            street: "",
+            city: "",
+            state: "",
+            zipCode: "",
+            country: "",
           },
           specializations: pData.specializations || [],
-          experience: pData.experience || '',
-          bio: pData.bio || '',
-          workingHours: pData.workingHours || { start: '09:00', end: '18:00' },
-          serviceRadius: pData.serviceRadius || 10
+          experience: pData.experience || "",
+          bio: pData.bio || "",
+          workingHours: pData.workingHours || { start: "09:00", end: "18:00" },
+          serviceRadius: pData.serviceRadius || 10,
         });
       }
 
@@ -83,37 +85,37 @@ const Profile = () => {
         setStats(statsResponse.data);
       }
     } catch (error) {
-      console.error('Error fetching profile data:', error);
-      toast.error('Failed to load profile data');
+      console.error("Error fetching profile data:", error);
+      toast.error("Failed to load profile data");
     } finally {
       setLoading(false);
     }
   };
 
   const handleInputChange = (field, value) => {
-    if (field.includes('.')) {
-      const [parent, child] = field.split('.');
-      setFormData(prev => ({
+    if (field.includes(".")) {
+      const [parent, child] = field.split(".");
+      setFormData((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: value
-        }
+          [child]: value,
+        },
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [field]: value
+        [field]: value,
       }));
     }
   };
 
   const handleSpecializationChange = (specialization) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       specializations: prev.specializations.includes(specialization)
-        ? prev.specializations.filter(s => s !== specialization)
-        : [...prev.specializations, specialization]
+        ? prev.specializations.filter((s) => s !== specialization)
+        : [...prev.specializations, specialization],
     }));
   };
 
@@ -121,18 +123,18 @@ const Profile = () => {
     try {
       setSaving(true);
       const response = await mechanicApi.updateProfile(formData);
-      
+
       if (response.success) {
         setProfile(response.data);
         setEditing(false);
         updateUser(response.data);
-        toast.success('Profile updated successfully!');
+        toast.success("Profile updated successfully!");
       } else {
-        toast.error(response.message || 'Failed to update profile');
+        toast.error(response.message || "Failed to update profile");
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
     } finally {
       setSaving(false);
     }
@@ -144,32 +146,34 @@ const Profile = () => {
 
     try {
       const formData = new FormData();
-      formData.append('avatar', file);
-      
+      formData.append("avatar", file);
+
       const response = await mechanicApi.uploadAvatar(formData);
       if (response.success) {
-        setProfile(prev => ({ ...prev, avatar: response.data.avatar }));
+        setProfile((prev) => ({ ...prev, avatar: response.data.avatar }));
         updateUser({ ...user, avatar: response.data.avatar });
-        toast.success('Avatar updated successfully!');
+        toast.success("Avatar updated successfully!");
       }
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      toast.error('Failed to upload avatar');
+      console.error("Error uploading avatar:", error);
+      toast.error("Failed to upload avatar");
     }
   };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      verified: { color: 'bg-green-100 text-green-800', icon: CheckCircleIcon },
-      pending: { color: 'bg-yellow-100 text-yellow-800', icon: ClockIcon },
-      rejected: { color: 'bg-red-100 text-red-800', icon: XCircleIcon }
+      verified: { color: "bg-success-100 text-success-800", icon: CheckCircleIcon },
+      pending: { color: "bg-warning-100 text-warning-800", icon: ClockIcon },
+      rejected: { color: "bg-danger-100 text-danger-800", icon: XCircleIcon },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
     const Icon = config.icon;
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}
+      >
         <Icon className="w-3 h-3 mr-1" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
@@ -179,36 +183,44 @@ const Profile = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-900"></div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Mechanic Profile</h1>
-        {!editing && (
+    <MechanicSurface
+      eyebrow="Profile"
+      title="Keep your mechanic profile current."
+      description="Update the information customers see, while keeping the operational details clear for your workflow."
+      actions={
+        !editing ? (
           <Button
             variant="primary"
             onClick={() => setEditing(true)}
             icon={<PencilIcon className="h-4 w-4" />}
           >
-            Edit Profile
+            Edit profile
           </Button>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Card */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Basic Information */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
+        ) : null
+      }
+      stats={[
+        { value: profile?.shopName ? "Set" : "Unset", label: "shop name" },
+        {
+          value: stats?.verificationStatus || "pending",
+          label: "verification",
+        },
+      ]}
+    >
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <Card>
+            <div className="flex flex-col gap-4 border-b border-hairline pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-lg font-semibold text-primary-900">
+                Basic information
+              </h2>
               {editing && (
-                <div className="flex space-x-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="secondary"
                     onClick={() => setEditing(false)}
@@ -221,283 +233,341 @@ const Profile = () => {
                     onClick={handleSave}
                     loading={saving}
                   >
-                    Save Changes
+                    Save changes
                   </Button>
                 </div>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   Full Name
                 </label>
                 {editing ? (
                   <Input
                     value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="Enter your full name"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile?.name || 'Not provided'}</p>
+                  <p className="text-primary-900">
+                    {profile?.name || "Not provided"}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   Phone Number
                 </label>
                 {editing ? (
                   <Input
                     value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="Enter phone number"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile?.phone || 'Not provided'}</p>
+                  <p className="text-primary-900">
+                    {profile?.phone || "Not provided"}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   Email
                 </label>
-                <p className="text-gray-900">{profile?.email}</p>
+                <p className="text-primary-900">{profile?.email}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   Experience (Years)
                 </label>
                 {editing ? (
                   <Input
                     type="number"
                     value={formData.experience}
-                    onChange={(e) => handleInputChange('experience', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("experience", e.target.value)
+                    }
                     placeholder="Years of experience"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile?.experience || 'Not specified'} years</p>
+                  <p className="text-primary-900">
+                    {profile?.experience || "Not specified"} years
+                  </p>
                 )}
               </div>
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-secondary-700">
                 Bio
               </label>
               {editing ? (
                 <textarea
                   value={formData.bio}
-                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                  onChange={(e) => handleInputChange("bio", e.target.value)}
                   placeholder="Tell us about yourself and your expertise..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full rounded-[16px] border border-hairline bg-surface px-3 py-2.5 text-sm text-primary-900 placeholder:text-secondary-400 focus:border-primary-900 focus:outline-none focus-visible:ring-2 focus:ring-primary-900/10"
                   rows={3}
                 />
               ) : (
-                <p className="text-gray-900">{profile?.bio || 'No bio provided'}</p>
+                <p className="text-primary-900">
+                  {profile?.bio || "No bio provided"}
+                </p>
               )}
             </div>
-          </div>
+          </Card>
 
-          {/* Shop Details */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Shop Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <h2 className="mb-4 text-lg font-semibold text-primary-900">
+              Shop details
+            </h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   Shop Name
                 </label>
                 {editing ? (
                   <Input
-                    value={formData.shopName || ''}
-                    onChange={(e) => handleInputChange('shopName', e.target.value)}
+                    value={formData.shopName || ""}
+                    onChange={(e) =>
+                      handleInputChange("shopName", e.target.value)
+                    }
                     placeholder="Enter your shop name"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile?.shopName || 'Not provided'}</p>
+                  <p className="text-primary-900">
+                    {profile?.shopName || "Not provided"}
+                  </p>
                 )}
               </div>
-              
+
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   Street Address
                 </label>
                 {editing ? (
                   <Input
-                    value={formData.shopAddress?.street || ''}
-                    onChange={(e) => handleInputChange('shopAddress.street', e.target.value)}
+                    value={formData.shopAddress?.street || ""}
+                    onChange={(e) =>
+                      handleInputChange("shopAddress.street", e.target.value)
+                    }
                     placeholder="Enter street address"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile?.shopAddress?.street || 'Not provided'}</p>
+                  <p className="text-primary-900">
+                    {profile?.shopAddress?.street || "Not provided"}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   City
                 </label>
                 {editing ? (
                   <Input
-                    value={formData.shopAddress?.city || ''}
-                    onChange={(e) => handleInputChange('shopAddress.city', e.target.value)}
+                    value={formData.shopAddress?.city || ""}
+                    onChange={(e) =>
+                      handleInputChange("shopAddress.city", e.target.value)
+                    }
                     placeholder="Enter city"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile?.shopAddress?.city || 'Not provided'}</p>
+                  <p className="text-primary-900">
+                    {profile?.shopAddress?.city || "Not provided"}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   State
                 </label>
                 {editing ? (
                   <Input
-                    value={formData.shopAddress?.state || ''}
-                    onChange={(e) => handleInputChange('shopAddress.state', e.target.value)}
+                    value={formData.shopAddress?.state || ""}
+                    onChange={(e) =>
+                      handleInputChange("shopAddress.state", e.target.value)
+                    }
                     placeholder="Enter state"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile?.shopAddress?.state || 'Not provided'}</p>
+                  <p className="text-primary-900">
+                    {profile?.shopAddress?.state || "Not provided"}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   ZIP Code
                 </label>
                 {editing ? (
                   <Input
-                    value={formData.shopAddress?.zipCode || ''}
-                    onChange={(e) => handleInputChange('shopAddress.zipCode', e.target.value)}
+                    value={formData.shopAddress?.zipCode || ""}
+                    onChange={(e) =>
+                      handleInputChange("shopAddress.zipCode", e.target.value)
+                    }
                     placeholder="Enter ZIP code"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile?.shopAddress?.zipCode || 'Not provided'}</p>
+                  <p className="text-primary-900">
+                    {profile?.shopAddress?.zipCode || "Not provided"}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   Country
                 </label>
                 {editing ? (
                   <Input
-                    value={formData.shopAddress?.country || ''}
-                    onChange={(e) => handleInputChange('shopAddress.country', e.target.value)}
+                    value={formData.shopAddress?.country || ""}
+                    onChange={(e) =>
+                      handleInputChange("shopAddress.country", e.target.value)
+                    }
                     placeholder="Enter country"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile?.shopAddress?.country || 'Not provided'}</p>
+                  <p className="text-primary-900">
+                    {profile?.shopAddress?.country || "Not provided"}
+                  </p>
                 )}
               </div>
             </div>
-          </div>
+          </Card>
 
-          {/* Specializations */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Specializations</h2>
+          <div className="rounded-[24px] border border-hairline bg-white p-6">
+            <h2 className="mb-4 text-lg font-semibold text-primary-900">
+              Specializations
+            </h2>
             {editing ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                 {[
-                  'Engine Repair', 'Brake System', 'Electrical', 'AC/Heating',
-                  'Transmission', 'Suspension', 'Tire Service', 'Diagnostics'
-                ].map(spec => (
+                  "Engine Repair",
+                  "Brake System",
+                  "Electrical",
+                  "AC/Heating",
+                  "Transmission",
+                  "Suspension",
+                  "Tire Service",
+                  "Diagnostics",
+                ].map((spec) => (
                   <label key={spec} className="flex items-center">
                     <input
                       type="checkbox"
                       checked={formData.specializations.includes(spec)}
                       onChange={() => handleSpecializationChange(spec)}
-                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      className="rounded border-hairline text-primary-900 focus:ring-primary-900"
                     />
-                    <span className="ml-2 text-sm text-gray-700">{spec}</span>
+                    <span className="ml-2 text-sm text-secondary-700">
+                      {spec}
+                    </span>
                   </label>
                 ))}
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {profile?.specializations?.length > 0 ? (
-                  profile.specializations.map(spec => (
-                    <span key={spec} className="px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-sm">
+                  profile.specializations.map((spec) => (
+                    <span
+                      key={spec}
+                      className="rounded-full bg-primary-100 px-3 py-1 text-sm text-primary-900"
+                    >
                       {spec}
                     </span>
                   ))
                 ) : (
-                  <p className="text-gray-500">No specializations added</p>
+                  <p className="text-secondary-500">No specializations added</p>
                 )}
               </div>
             )}
           </div>
 
-          {/* Working Hours & Service Area */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Working Hours & Service Area</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="rounded-[24px] border border-hairline bg-white p-6">
+            <h2 className="mb-4 text-lg font-semibold text-primary-900">
+              Working Hours & Service Area
+            </h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   Start Time
                 </label>
                 {editing ? (
                   <Input
                     type="time"
                     value={formData.workingHours.start}
-                    onChange={(e) => handleInputChange('workingHours.start', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("workingHours.start", e.target.value)
+                    }
                   />
                 ) : (
-                  <p className="text-gray-900">{profile?.workingHours?.start || 'Not set'}</p>
+                  <p className="text-primary-900">
+                    {profile?.workingHours?.start || "Not set"}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   End Time
                 </label>
                 {editing ? (
                   <Input
                     type="time"
                     value={formData.workingHours.end}
-                    onChange={(e) => handleInputChange('workingHours.end', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("workingHours.end", e.target.value)
+                    }
                   />
                 ) : (
-                  <p className="text-gray-900">{profile?.workingHours?.end || 'Not set'}</p>
+                  <p className="text-primary-900">
+                    {profile?.workingHours?.end || "Not set"}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-secondary-700">
                   Service Radius (km)
                 </label>
                 {editing ? (
                   <Input
                     type="number"
                     value={formData.serviceRadius}
-                    onChange={(e) => handleInputChange('serviceRadius', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("serviceRadius", e.target.value)
+                    }
                     min="1"
                     max="50"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile?.serviceRadius || 'Not set'} km</p>
+                  <p className="text-primary-900">
+                    {profile?.serviceRadius || "Not set"} km
+                  </p>
                 )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-6">
-          {/* Avatar & Status */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="rounded-[24px] border border-hairline bg-white p-6">
             <div className="text-center">
               <div className="relative inline-block">
                 <img
-                  src={profile?.avatar || '/default-avatar.png'}
+                  src={profile?.avatar || "/default-avatar.png"}
                   alt="Profile"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
+                  className="h-24 w-24 rounded-full border-4 border-hairline object-cover"
                 />
                 {editing && (
-                  <label className="absolute bottom-0 right-0 bg-primary-600 text-white p-2 rounded-full cursor-pointer hover:bg-primary-700">
+                  <label className="absolute bottom-0 right-0 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-primary-900 text-white">
                     <CameraIcon className="h-4 w-4" />
                     <input
                       type="file"
@@ -508,69 +578,85 @@ const Profile = () => {
                   </label>
                 )}
               </div>
-              
-              <h3 className="mt-4 text-lg font-semibold text-gray-900">{profile?.name}</h3>
-              <p className="text-gray-600">{profile?.email}</p>
-              
+
+              <h3 className="mt-4 text-lg font-semibold text-primary-900">
+                {profile?.name}
+              </h3>
+              <p className="text-secondary-600">{profile?.email}</p>
+
               <div className="mt-3">
-                {getStatusBadge(profile?.verificationStatus || 'pending')}
+                {getStatusBadge(profile?.verificationStatus || "pending")}
               </div>
 
               {profile?.rating && (
                 <div className="mt-3 flex items-center justify-center">
-                  <StarIcon className="h-5 w-5 text-yellow-400" />
-                  <span className="ml-1 text-gray-900">{profile.rating.toFixed(1)}</span>
-                  <span className="ml-1 text-gray-600">({profile.totalReviews} reviews)</span>
+                  <StarIcon className="h-5 w-5 text-warning-500" />
+                  <span className="ml-1 text-primary-900">
+                    {profile.rating.toFixed(1)}
+                  </span>
+                  <span className="ml-1 text-secondary-600">
+                    ({profile.totalReviews} reviews)
+                  </span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Statistics */}
           {stats && (
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistics</h3>
+            <div className="rounded-[24px] border border-hairline bg-white p-6">
+              <h3 className="mb-4 text-lg font-semibold text-primary-900">
+                Statistics
+              </h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Total Requests</span>
-                  <span className="font-semibold">{stats.totalRequests}</span>
+                  <span className="text-secondary-600">Total Requests</span>
+                  <span className="font-semibold text-primary-900">
+                    {stats.totalRequests}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Completed</span>
-                  <span className="font-semibold text-green-600">{stats.completedRequests}</span>
+                  <span className="text-secondary-600">Completed</span>
+                  <span className="font-semibold text-success-700">
+                    {stats.completedRequests}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Total Earnings</span>
-                  <span className="font-semibold text-green-600">{formatCurrency(stats.totalEarnings)}</span>
+                  <span className="text-secondary-600">Total Earnings</span>
+                  <span className="font-semibold text-success-700">
+                    {formatCurrency(stats.totalEarnings)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Average Rating</span>
-                  <span className="font-semibold">{stats.averageRating?.toFixed(1) || 'N/A'}</span>
+                  <span className="text-secondary-600">Average Rating</span>
+                  <span className="font-semibold text-primary-900">
+                    {stats.averageRating?.toFixed(1) || "N/A"}
+                  </span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+          <div className="rounded-[24px] border border-hairline bg-white p-6">
+            <h3 className="mb-4 text-lg font-semibold text-primary-900">
+              Quick Actions
+            </h3>
             <div className="space-y-2">
               <Button
-                variant="outline"
+                variant="secondary"
                 className="w-full justify-start"
                 icon={<WrenchScrewdriverIcon className="h-4 w-4" />}
               >
                 View Assigned Requests
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 className="w-full justify-start"
                 icon={<CurrencyDollarIcon className="h-4 w-4" />}
               >
                 View Earnings
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 className="w-full justify-start"
                 icon={<StarIcon className="h-4 w-4" />}
               >
@@ -580,7 +666,7 @@ const Profile = () => {
           </div>
         </div>
       </div>
-    </div>
+    </MechanicSurface>
   );
 };
 

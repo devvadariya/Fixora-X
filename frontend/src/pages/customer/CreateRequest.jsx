@@ -245,7 +245,7 @@ const CreateRequest = () => {
               value={formData.description}
               onChange={handleInputChange}
               rows={4}
-              className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900 focus:border-transparent"
               placeholder="Please provide as much detail as possible about the issue..."
             />
             {errors.description && (
@@ -269,7 +269,7 @@ const CreateRequest = () => {
                 name="vehicleInfo.type"
                 value={formData.vehicleInfo.type}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900 focus:border-transparent"
               >
                 <option value="">Select vehicle type</option>
                 {Object.entries(VEHICLE_TYPES).map(([key, value]) => (
@@ -366,7 +366,7 @@ const CreateRequest = () => {
                 name="userExpectedPrice"
                 value={formData.userExpectedPrice}
                 onChange={handleInputChange}
-                className={`block w-full pl-7 pr-12 border-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                className={`block w-full pl-7 pr-12 border-2 rounded-lg transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900 focus:border-transparent ${
                   errors.userExpectedPrice ? 'border-danger-300' : 'border-secondary-300'
                 }`}
                 placeholder="e.g. 1500"

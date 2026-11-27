@@ -45,7 +45,7 @@ describe('Fixora-X API Integration Tests', () => {
       expect(response.body).toHaveProperty('success', true);
       expect(response.body).toHaveProperty('message', 'Fixora-X API is running');
       expect(response.body).toHaveProperty('timestamp');
-      expect(response.body).toHaveProperty('environment', 'development');
+      expect(response.body).toHaveProperty('environment', 'test');
     });
   });
 
@@ -180,8 +180,11 @@ describe('Fixora-X API Integration Tests', () => {
     describe('Vehicle Management', () => {
       test('POST /api/customer/vehicles should add a vehicle', async () => {
         const vehicleData = {
+          name: 'My Camry',
           type: 'car',
+          make: 'Toyota',
           model: 'Toyota Camry 2020',
+          year: 2020,
           plate: 'TEST123'
         };
 
@@ -209,13 +212,18 @@ describe('Fixora-X API Integration Tests', () => {
         expect(response.body.data.length).toBeGreaterThan(0);
       });
 
-      test('PATCH /api/customer/vehicles/:vehicleId should update vehicle', async () => {
+      test('PUT /api/customer/vehicles/:vehicleId should update vehicle', async () => {
         const updateData = {
-          model: 'Toyota Camry 2021 Updated'
+          name: 'My Camry',
+          type: 'car',
+          make: 'Toyota',
+          model: 'Toyota Camry 2021 Updated',
+          year: 2021,
+          plate: 'TEST123'
         };
 
         const response = await request(app)
-          .patch(`/api/customer/vehicles/${vehicleId}`)
+          .put(`/api/customer/vehicles/${vehicleId}`)
           .set('Authorization', `Bearer ${customerToken}`)
           .send(updateData)
           .expect(200);
@@ -241,11 +249,12 @@ describe('Fixora-X API Integration Tests', () => {
             lng: -74.0060,
             address: 'New York, NY'
           },
-          priority: 'high'
+          priority: 'high',
+          userExpectedPrice: 100
         };
 
         const response = await request(app)
-          .post('/api/customer/requests')
+          .post('/api/customer/service-requests')
           .set('Authorization', `Bearer ${customerToken}`)
           .send(requestData)
           .expect(201);
@@ -301,7 +310,7 @@ describe('Fixora-X API Integration Tests', () => {
           .expect(200);
 
         expect(response.body).toHaveProperty('success', true);
-        expect(response.body.data.role).toBe('mechanic');
+        expect(response.body.data.profile.role).toBe('mechanic');
       });
     });
   });
@@ -363,7 +372,7 @@ describe('Fixora-X API Integration Tests', () => {
       };
 
       const response = await request(app)
-        .post('/api/customer/requests')
+        .post('/api/customer/service-requests')
         .set('Authorization', `Bearer ${customerToken}`)
         .send(invalidRequest)
         .expect(400);
@@ -392,7 +401,7 @@ describe('Fixora-X API Integration Tests', () => {
   describe('Rate Limiting', () => {
     test('Should enforce rate limits', async () => {
       // Make multiple rapid requests to test rate limiting
-      const promises = Array(20).fill().map(() => 
+      const promises = Array(50).fill().map(() => 
         request(app)
           .post('/api/auth/login')
           .send({

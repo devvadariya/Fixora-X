@@ -11,6 +11,8 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline';
 import Button from '../../components/common/Button';
+import Card from '../../components/common/Card';
+import CustomerSurface from '../../components/customer/CustomerSurface';
 import requestService from '../../services/requestService';
 import paymentApi from '../../api/paymentApi';
 import { formatDate, formatCurrency } from '../../utils/helpers';
@@ -158,133 +160,105 @@ const CustomerDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-lg text-white p-6">
-        <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
-        <p className="text-primary-100 mb-4">
-          Need roadside assistance? We're here to help 24/7.
-        </p>
+    <CustomerSurface
+      eyebrow="Customer dashboard"
+      title="Manage roadside support from one place."
+      description="Track active requests, settle payments, and jump into booking without having to re-learn the interface between screens."
+      actions={(
         <Link to="/customer/mechanics">
-          <Button variant="secondary" icon={<PlusIcon className="h-5 w-5" />}>
-            Request Help Now
+          <Button variant="primary" icon={<PlusIcon className="h-5 w-5" />}>
+            Request help now
           </Button>
         </Link>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg p-6 shadow-card">
-          <div className="flex items-center">
-            <div className="p-3 bg-primary-100 rounded-lg">
-              <WrenchScrewdriverIcon className="h-6 w-6 text-primary-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-secondary-600">Total Requests</p>
-              <p className="text-2xl font-bold text-secondary-900">{stats.totalRequests}</p>
-            </div>
+      )}
+      stats={[
+        { value: stats.totalRequests, label: 'total requests' },
+        { value: stats.activeRequests, label: 'active requests' },
+        { value: stats.completedRequests, label: 'completed requests' },
+        { value: formatCurrency(stats.totalSpent), label: 'total spent' },
+      ]}
+    >
+      <Card variant="promo" className="bg-gradient-to-r from-primary-900 via-brand-purple to-brand-magenta">
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr] lg:items-end">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-white/75">
+              Always on
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+              Keep your service requests, payments, and follow-ups in one calm flow.
+            </h2>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/80 sm:text-base">
+              The refreshed dashboard gives you a quicker snapshot of what is pending, what is complete, and what still needs attention.
+            </p>
           </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-6 shadow-card">
-          <div className="flex items-center">
-            <div className="p-3 bg-warning-100 rounded-lg">
-              <ClockIcon className="h-6 w-6 text-warning-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-secondary-600">Active Requests</p>
-              <p className="text-2xl font-bold text-secondary-900">{stats.activeRequests}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-6 shadow-card">
-          <div className="flex items-center">
-            <div className="p-3 bg-success-100 rounded-lg">
-              <CheckCircleIcon className="h-6 w-6 text-success-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-secondary-600">Completed</p>
-              <p className="text-2xl font-bold text-secondary-900">{stats.completedRequests}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-6 shadow-card">
-          <div className="flex items-center">
-            <div className="p-3 bg-secondary-100 rounded-lg">
-              <span className="text-secondary-600 font-semibold">₹</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-secondary-600">Total Spent</p>
-              <p className="text-2xl font-bold text-secondary-900">
-                {formatCurrency(stats.totalSpent)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Requests */}
-      <div className="bg-white rounded-lg shadow-card">
-        <div className="px-6 py-4 border-b border-secondary-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-secondary-900">Recent Requests</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <Link to="/customer/requests">
-              <Button variant="ghost" size="sm">View All</Button>
+              <Button variant="secondary" className="w-full justify-center">View request history</Button>
+            </Link>
+            <Link to="/customer/payments">
+              <Button variant="tertiary" className="w-full justify-center">Review payments</Button>
             </Link>
           </div>
         </div>
-        
-        <div className="p-6">
+      </Card>
+
+      <Card>
+        <div className="flex items-center justify-between gap-4 border-b border-hairline pb-4">
+          <h2 className="text-lg font-semibold text-primary-900">Recent requests</h2>
+          <Link to="/customer/requests">
+            <Button variant="ghost" size="sm">View all</Button>
+          </Link>
+        </div>
+
+        <div className="mt-6">
           {requests.length === 0 ? (
-            <div className="text-center py-8">
+            <div className="rounded-3xl border border-dashed border-hairline bg-surface px-6 py-10 text-center">
               <WrenchScrewdriverIcon className="mx-auto h-12 w-12 text-secondary-400" />
-              <h3 className="mt-2 text-sm font-medium text-secondary-900">No requests yet</h3>
-              <p className="mt-1 text-sm text-secondary-500">
-                Get started by creating your first service request.
+              <h3 className="mt-4 text-lg font-semibold text-primary-900">No requests yet</h3>
+              <p className="mt-2 text-sm leading-7 text-secondary-600">
+                Create your first request to start tracking service progress here.
               </p>
               <div className="mt-6">
                 <Link to="/customer/mechanics">
                   <Button variant="primary" icon={<PlusIcon className="h-5 w-5" />}>
-                    Create Request
+                    Create request
                   </Button>
                 </Link>
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {requests.map((request) => (
-                <div key={request._id} className="flex items-center justify-between p-4 border border-secondary-200 rounded-lg hover:bg-secondary-50 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    {getStatusIcon(request.status)}
+                <div key={request._id} className="flex flex-col gap-4 rounded-3xl border border-hairline bg-white p-5 transition-colors hover:bg-surface lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="mt-0.5">{getStatusIcon(request.status)}</div>
                     <div>
-                      <h3 className="font-medium text-secondary-900">
+                      <h3 className="text-base font-semibold text-primary-900">
                         {request.issueType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </h3>
-                      <div className="flex items-center text-sm text-secondary-500">
-                        <MapPinIcon className="h-4 w-4 mr-1" />
-                        {request.location.address || 'Location provided'}
-                        <span className="mx-2">•</span>
-                        {formatDate(request.createdAt)}
-                      </div>
+                      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-secondary-600">
+                        <span className="inline-flex items-center gap-1">
+                          <MapPinIcon className="h-4 w-4" />
+                          {request.location.address || 'Location provided'}
+                        </span>
+                        <span className="hidden sm:inline">•</span>
+                        <span>{formatDate(request.createdAt)}</span>
+                      </p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center space-x-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-${request.status === 'completed' && request.paymentStatus !== 'paid' ? 'pending' : request.status}`}>
-                      {request.status === 'completed' ? (request.paymentStatus === 'paid' ? 'Completed with Payment' : 'Payment Pending') : REQUEST_STATUS_LABELS[request.status]}
+
+                  <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${request.status === 'completed' && request.paymentStatus !== 'paid' ? 'bg-warning-50 text-warning-700' : 'bg-surface text-primary-900'}`}>
+                      {request.status === 'completed'
+                        ? (request.paymentStatus === 'paid' ? 'Completed with payment' : 'Payment pending')
+                        : REQUEST_STATUS_LABELS[request.status]}
                     </span>
-                    {request.quotation && (
-                      <span className="text-sm font-medium text-secondary-900">
-                        {formatCurrency(request.quotation)}
-                      </span>
-                    )}
+                    {request.quotation && <span className="text-sm font-semibold text-primary-900">{formatCurrency(request.quotation)}</span>}
                     {canDelete(request) && (
                       <button
                         onClick={() => handleDeleteRequest(request._id)}
-                        className="p-1 text-danger-600 hover:bg-danger-50 rounded-full transition-colors"
-                        title="Delete Request"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-hairline text-danger-600 transition-colors hover:bg-danger-50"
+                        title="Delete request"
                       >
                         <TrashIcon className="h-5 w-5" />
                       </button>
@@ -295,84 +269,67 @@ const CustomerDashboard = () => {
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
-      {/* Pending Payments Section */}
       {pendingPayments.length > 0 && (
-        <div className="bg-white rounded-lg shadow-card">
-          <div className="px-6 py-4 border-b border-secondary-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-secondary-900">Pending Payments</h2>
-              <Link to="/customer/payments">
-                <Button variant="ghost" size="sm">View All Payments</Button>
-              </Link>
-            </div>
+        <Card>
+          <div className="flex items-center justify-between gap-4 border-b border-hairline pb-4">
+            <h2 className="text-lg font-semibold text-primary-900">Pending payments</h2>
+            <Link to="/customer/payments">
+              <Button variant="ghost" size="sm">View all</Button>
+            </Link>
           </div>
-          
-          <div className="p-6">
-            <div className="space-y-4">
-              {pendingPayments.map((payment) => (
-                <div key={payment._id} className="flex items-center justify-between p-4 border border-secondary-200 rounded-lg hover:bg-secondary-50 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-2 bg-yellow-100 rounded-lg">
-                      <CreditCardIcon className="h-5 w-5 text-yellow-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-secondary-900">
-                        {payment.serviceRequest?.issueType?.replace('_', ' ') || 'Service Payment'}
-                      </h3>
-                      <div className="flex items-center text-sm text-secondary-500">
-                        <span className="font-medium text-secondary-900">
-                          {formatCurrency(payment.amount)}
-                        </span>
-                        <span className="mx-2">•</span>
-                        <span>Due: {formatDate(payment.createdAt)}</span>
-                      </div>
-                    </div>
+
+          <div className="mt-6 space-y-3">
+            {pendingPayments.map((payment) => (
+              <div key={payment._id} className="flex flex-col gap-4 rounded-3xl border border-hairline bg-white p-5 transition-colors hover:bg-surface lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-warning-50 text-warning-600">
+                    <CreditCardIcon className="h-5 w-5" />
                   </div>
-                  
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => handlePaymentClick(payment.serviceRequest)}
-                  >
-                    Pay Now
-                  </Button>
+                  <div>
+                    <h3 className="text-base font-semibold text-primary-900">
+                      {payment.serviceRequest?.issueType?.replace('_', ' ') || 'Service payment'}
+                    </h3>
+                    <p className="mt-1 text-sm text-secondary-600">
+                      <span className="font-semibold text-primary-900">{formatCurrency(payment.amount)}</span>
+                      <span className="mx-2">•</span>
+                      <span>Due {formatDate(payment.createdAt)}</span>
+                    </p>
+                  </div>
                 </div>
-              ))}
-            </div>
+
+                <Button variant="primary" size="sm" onClick={() => handlePaymentClick(payment.serviceRequest)}>
+                  Pay now
+                </Button>
+              </div>
+            ))}
           </div>
-        </div>
+        </Card>
       )}
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 shadow-card">
-          <h3 className="text-lg font-semibold text-secondary-900 mb-4">Need Emergency Help?</h3>
-          <p className="text-secondary-600 mb-4">
-            For urgent roadside assistance, create a high-priority request.
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <h3 className="text-lg font-semibold text-primary-900">Need emergency help?</h3>
+          <p className="mt-2 text-sm leading-7 text-secondary-600">
+            Create a high-priority request when you need support fast.
           </p>
-          <Link to="/customer/mechanics">
-            <Button variant="danger" className="w-full">
-              Emergency Request
-            </Button>
+          <Link to="/customer/mechanics" className="mt-5 block">
+            <Button variant="danger" className="w-full">Emergency request</Button>
           </Link>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-lg p-6 shadow-card">
-          <h3 className="text-lg font-semibold text-secondary-900 mb-4">Track Active Request</h3>
-          <p className="text-secondary-600 mb-4">
-            View real-time updates on your current service request.
+        <Card>
+          <h3 className="text-lg font-semibold text-primary-900">Track an active request</h3>
+          <p className="mt-2 text-sm leading-7 text-secondary-600">
+            Open the live request view and follow the current service flow.
           </p>
-          <Link to="/customer/requests?status=active">
-            <Button variant="primary" className="w-full">
-              Track Request
-            </Button>
+          <Link to="/customer/requests?status=active" className="mt-5 block">
+            <Button variant="primary" className="w-full">Track request</Button>
           </Link>
-        </div>
+        </Card>
       </div>
 
-      {/* Payment Modal */}
       {showPaymentModal && selectedRequest && (
         <UnifiedPaymentModal
           isOpen={showPaymentModal}
@@ -383,7 +340,7 @@ const CustomerDashboard = () => {
           onPaymentFailure={handlePaymentFailure}
         />
       )}
-    </div>
+    </CustomerSurface>
   );
 };
 

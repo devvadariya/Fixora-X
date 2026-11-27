@@ -1,31 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { XMarkIcon, CreditCardIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
-import Button from '../common/Button';
-import paymentApi from '../../api/paymentApi';
-import { useAuth } from '../../contexts/AuthContext';
-import { formatCurrency } from '../../utils/helpers';
-import toast from 'react-hot-toast';
+import {
+  CheckCircleIcon,
+  CreditCardIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import paymentApi from "../../api/paymentApi";
+import { useAuth } from "../../contexts/AuthContext";
+import { formatCurrency } from "../../utils/helpers";
+import Button from "../common/Button";
 
-const PaymentModal = ({ 
-  isOpen, 
-  onClose, 
-  serviceRequest, 
-  amount, 
+const PaymentModal = ({
+  isOpen,
+  onClose,
+  serviceRequest,
+  amount,
   onPaymentSuccess,
-  onPaymentFailure 
+  onPaymentFailure,
 }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [paymentStep, setPaymentStep] = useState('details'); // 'details', 'processing', 'success', 'failed'
+  const [paymentStep, setPaymentStep] = useState("details"); // 'details', 'processing', 'success', 'failed'
   const [paymentData, setPaymentData] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape" && paymentStep === "details") onClose();
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen, onClose, paymentStep]);
+
+  useEffect(() => {
     if (isOpen) {
       // Load Razorpay SDK when modal opens
-      loadRazorpaySDK().catch(error => {
-        console.error('Failed to load Razorpay SDK:', error);
-        setError('Payment system unavailable. Please try again later.');
+      loadRazorpaySDK().catch((error) => {
+        console.error("Failed to load Razorpay SDK:", error);
+        setError("Payment system unavailable. Please try again later.");
       });
     }
   }, [isOpen]);
@@ -37,10 +52,10 @@ const PaymentModal = ({
         return;
       }
 
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
-      script.onerror = () => reject(new Error('Failed to load Razorpay SDK'));
+      script.onerror = () => reject(new Error("Failed to load Razorpay SDK"));
       document.head.appendChild(script);
     });
   };
@@ -48,19 +63,19 @@ const PaymentModal = ({
   const processRazorpayPayment = (orderData) => {
     return new Promise((resolve, reject) => {
       if (!window.Razorpay) {
-        reject(new Error('Razorpay SDK not loaded'));
+        reject(new Error("Razorpay SDK not loaded"));
         return;
       }
 
       const options = {
-        key: 'rzp_test_51O8X8X8X8X8X8', // Test key for development
+        key: "rzp_test_51O8X8X8X8X8X8", // Test key for development
         amount: orderData.amount,
-        currency: orderData.currency || 'INR',
-        name: 'Fixora-X',
-        description: 'Service Payment',
+        currency: orderData.currency || "INR",
+        name: "Fixora-X",
+        description: "Service Payment",
         order_id: orderData.orderId,
         handler: function (response) {
-          console.log('Payment successful:', response);
+          console.log("Payment successful:", response);
           resolve({
             razorpayPaymentId: response.razorpay_payment_id,
             razorpayOrderId: response.razorpay_order_id,
@@ -68,21 +83,21 @@ const PaymentModal = ({
           });
         },
         prefill: {
-          name: orderData.customerName || 'Test Customer',
-          email: orderData.customerEmail || 'test@example.com',
-          contact: orderData.customerPhone || '9999999999',
+          name: orderData.customerName || "Test Customer",
+          email: orderData.customerEmail || "test@example.com",
+          contact: orderData.customerPhone || "9999999999",
         },
         theme: {
-          color: '#0ea5e9',
+          color: "#0ea5e9",
         },
         modal: {
           ondismiss: function () {
-            console.log('Payment modal dismissed');
-            reject(new Error('Payment cancelled by user'));
+            console.log("Payment modal dismissed");
+            reject(new Error("Payment cancelled by user"));
           },
         },
         notes: {
-          service_request_id: orderData.serviceRequestId || 'test_request',
+          service_request_id: orderData.serviceRequestId || "test_request",
         },
       };
 
@@ -92,7 +107,7 @@ const PaymentModal = ({
   };
 
   const resetModal = () => {
-    setPaymentStep('details');
+    setPaymentStep("details");
     setPaymentData(null);
     setError(null);
     setLoading(false);
@@ -106,81 +121,92 @@ const PaymentModal = ({
   const handlePayment = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // Step 1: Create payment order
-      setPaymentStep('processing');
-      
-      console.log('Creating payment order for service request:', serviceRequest._id);
-      const orderResponse = await paymentApi.createPostCompletionPaymentOrder(serviceRequest._id);
-      
+      setPaymentStep("processing");
+
+      console.log(
+        "Creating payment order for service request:",
+        serviceRequest._id,
+      );
+      const orderResponse = await paymentApi.createPostCompletionPaymentOrder(
+        serviceRequest._id,
+      );
 
       if (!orderResponse.success) {
-        throw new Error(orderResponse.message || 'Failed to create payment order');
+        throw new Error(
+          orderResponse.message || "Failed to create payment order",
+        );
       }
 
       const { orderId, amount, currency, paymentId } = orderResponse.data;
-      console.log('Payment order created:', { orderId, amount, currency, paymentId });
+      console.log("Payment order created:", {
+        orderId,
+        amount,
+        currency,
+        paymentId,
+      });
 
       // Step 2: Process payment with Razorpay
       const paymentData = {
         orderId: orderId,
         amount: amount,
         currency: currency,
-        customerName: user?.name || 'Test Customer',
-        customerEmail: user?.email || 'test@example.com',
-        customerPhone: user?.phone || '9999999999',
-        serviceRequestId: serviceRequest._id
+        customerName: user?.name || "Test Customer",
+        customerEmail: user?.email || "test@example.com",
+        customerPhone: user?.phone || "9999999999",
+        serviceRequestId: serviceRequest._id,
       };
 
-      console.log('Processing payment with Razorpay:', paymentData);
+      console.log("Processing payment with Razorpay:", paymentData);
       const razorpayResult = await processRazorpayPayment(paymentData);
-      console.log('Razorpay payment result:', razorpayResult);
+      console.log("Razorpay payment result:", razorpayResult);
 
       // Step 3: Verify payment on backend
       const verificationData = {
         paymentId: paymentId,
         razorpayPaymentId: razorpayResult.razorpayPaymentId,
         razorpayOrderId: razorpayResult.razorpayOrderId,
-        razorpaySignature: razorpayResult.razorpaySignature
+        razorpaySignature: razorpayResult.razorpaySignature,
       };
 
-      console.log('Verifying payment:', verificationData);
-      const verificationResponse = await paymentApi.verifyPayment(verificationData);
+      console.log("Verifying payment:", verificationData);
+      const verificationResponse =
+        await paymentApi.verifyPayment(verificationData);
 
       if (verificationResponse.success) {
-        console.log('Payment verified successfully');
+        console.log("Payment verified successfully");
         setPaymentData(verificationResponse.data);
-        setPaymentStep('success');
-        
+        setPaymentStep("success");
+
         // Call success callback
         if (onPaymentSuccess) {
           onPaymentSuccess(verificationResponse.data);
         }
-        
-        toast.success('Payment completed successfully!');
-      } else {
-        throw new Error('Payment verification failed');
-      }
 
+        toast.success("Payment completed successfully!");
+      } else {
+        throw new Error("Payment verification failed");
+      }
     } catch (error) {
-      console.error('Payment error:', error);
-      let errorMessage = 'Payment failed. Please try again.';
-      
+      console.error("Payment error:", error);
+      let errorMessage = "Payment failed. Please try again.";
+
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       setError(errorMessage);
-      setPaymentStep('failed');
-      
+      setPaymentStep("failed");
+
       // Call failure callback
       if (onPaymentFailure) {
         onPaymentFailure(error);
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -189,51 +215,62 @@ const PaymentModal = ({
 
   const getStepContent = () => {
     switch (paymentStep) {
-      case 'details':
+      case "details":
         return (
           <div>
             <div className="p-6">
               <h3 className="text-lg font-medium text-secondary-900 mb-4">
                 Payment Details
               </h3>
-              
+
               {/* Service Details */}
               <div className="bg-secondary-50 rounded-lg p-4 mb-6">
-                <h4 className="font-medium text-secondary-900 mb-3">Service Summary</h4>
+                <h4 className="font-medium text-secondary-900 mb-3">
+                  Service Summary
+                </h4>
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-secondary-600">Service Type:</span>
                     <span className="text-secondary-900">
-                      {serviceRequest.issueType?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      {serviceRequest.issueType
+                        ?.replace("_", " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-secondary-600">Vehicle:</span>
                     <span className="text-secondary-900">
-                      {serviceRequest.vehicleInfo?.model} ({serviceRequest.vehicleInfo?.plate})
+                      {serviceRequest.vehicleInfo?.model} (
+                      {serviceRequest.vehicleInfo?.plate})
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-secondary-600">Mechanic:</span>
                     <span className="text-secondary-900">
-                      {serviceRequest.mechanic?.name || 'TBD'}
+                      {serviceRequest.mechanic?.name || "TBD"}
                     </span>
                   </div>
                   <div className="flex justify-between font-medium border-t border-secondary-200 pt-2">
                     <span className="text-secondary-900">Total Amount:</span>
-                    <span className="text-secondary-900">{formatCurrency(amount)}</span>
+                    <span className="text-secondary-900">
+                      {formatCurrency(amount)}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Payment Method */}
               <div className="mb-6">
-                <h4 className="font-medium text-secondary-900 mb-3">Payment Method</h4>
+                <h4 className="font-medium text-secondary-900 mb-3">
+                  Payment Method
+                </h4>
                 <div className="border border-secondary-200 rounded-lg p-4">
                   <div className="flex items-center">
                     <CreditCardIcon className="h-6 w-6 text-primary-600 mr-3" />
                     <div>
-                      <p className="font-medium text-secondary-900">Razorpay Secure Payment</p>
+                      <p className="font-medium text-secondary-900">
+                        Razorpay Secure Payment
+                      </p>
                       <p className="text-sm text-secondary-600">
                         Credit Card, Debit Card, UPI, Net Banking, Wallets
                       </p>
@@ -270,7 +307,7 @@ const PaymentModal = ({
           </div>
         );
 
-      case 'processing':
+      case "processing":
         return (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600 mx-auto mb-4"></div>
@@ -283,7 +320,7 @@ const PaymentModal = ({
           </div>
         );
 
-      case 'success':
+      case "success":
         return (
           <div className="p-8 text-center">
             <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -293,12 +330,15 @@ const PaymentModal = ({
               Payment Successful!
             </h3>
             <p className="text-secondary-600 mb-4">
-              Your payment of {formatCurrency(amount)} has been processed successfully.
+              Your payment of {formatCurrency(amount)} has been processed
+              successfully.
             </p>
-            
+
             {paymentData && (
               <div className="bg-secondary-50 rounded-lg p-4 mb-6 text-left">
-                <h4 className="font-medium text-secondary-900 mb-2">Transaction Details</h4>
+                <h4 className="font-medium text-secondary-900 mb-2">
+                  Transaction Details
+                </h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-secondary-600">Transaction ID:</span>
@@ -308,7 +348,9 @@ const PaymentModal = ({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-secondary-600">Status:</span>
-                    <span className="text-success-600 font-medium">Completed</span>
+                    <span className="text-success-600 font-medium">
+                      Completed
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-secondary-600">Date:</span>
@@ -320,17 +362,13 @@ const PaymentModal = ({
               </div>
             )}
 
-            <Button
-              variant="primary"
-              onClick={handleClose}
-              className="w-full"
-            >
+            <Button variant="primary" onClick={handleClose} className="w-full">
               Continue
             </Button>
           </div>
         );
 
-      case 'failed':
+      case "failed":
         return (
           <div className="p-8 text-center">
             <div className="w-16 h-16 bg-danger-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -340,19 +378,17 @@ const PaymentModal = ({
               Payment Failed
             </h3>
             <p className="text-secondary-600 mb-4">
-              {error || 'Your payment could not be processed. Please try again.'}
+              {error ||
+                "Your payment could not be processed. Please try again."}
             </p>
-            
+
             <div className="flex space-x-3 justify-center">
-              <Button
-                variant="secondary"
-                onClick={handleClose}
-              >
+              <Button variant="secondary" onClick={handleClose}>
                 Cancel
               </Button>
               <Button
                 variant="primary"
-                onClick={() => setPaymentStep('details')}
+                onClick={() => setPaymentStep("details")}
               >
                 Try Again
               </Button>
@@ -371,23 +407,32 @@ const PaymentModal = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         {/* Background overlay */}
-        <div 
-          className="fixed inset-0 bg-secondary-500 bg-opacity-75 transition-opacity"
-          onClick={paymentStep === 'details' ? handleClose : undefined}
+        <div
+          className="fixed inset-0 bg-primary-900/70 backdrop-blur-sm transition-opacity"
+          onClick={paymentStep === "details" ? handleClose : undefined}
         ></div>
 
         {/* Modal panel */}
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div
+          className="inline-block w-full transform overflow-hidden rounded-2xl border border-hairline bg-white text-left shadow-modal transition-all sm:my-8 sm:max-w-lg sm:align-middle"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="payment-dialog-title"
+        >
           {/* Header */}
-          {paymentStep === 'details' && (
-            <div className="px-6 py-4 border-b border-secondary-200">
+          {paymentStep === "details" && (
+            <div className="border-b border-hairline px-6 py-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-secondary-900">
+                <h2
+                  id="payment-dialog-title"
+                  className="text-lg font-medium text-ink"
+                >
                   Complete Payment
                 </h2>
                 <button
                   onClick={handleClose}
-                  className="text-secondary-400 hover:text-secondary-600"
+                  aria-label="Close payment dialog"
+                  className="rounded-lg p-2 text-secondary-500 transition-colors hover:bg-surface hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                 >
                   <XMarkIcon className="h-6 w-6" />
                 </button>

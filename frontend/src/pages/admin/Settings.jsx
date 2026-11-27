@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  UserIcon,
-  ShieldCheckIcon,
-  CogIcon,
-  BellIcon
-} from '@heroicons/react/24/outline';
+import { UserIcon, ShieldCheckIcon, CogIcon, BellIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 import adminService from '../../services/adminService';
 import { formatDate } from '../../utils/helpers';
@@ -19,12 +14,12 @@ const Settings = () => {
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    phone: user?.phone || ''
+    phone: user?.phone || '',
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const [activity, setActivity] = useState([]);
 
@@ -51,7 +46,7 @@ const Settings = () => {
 
     try {
       const response = await adminService.updateProfile(profileData);
-      
+
       if (response.success) {
         toast.success('Profile updated successfully');
         updateUser(response.data.user);
@@ -66,7 +61,7 @@ const Settings = () => {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('New passwords do not match');
       return;
@@ -82,15 +77,15 @@ const Settings = () => {
     try {
       const response = await adminService.changePassword({
         currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword
+        newPassword: passwordData.newPassword,
       });
-      
+
       if (response.success) {
         toast.success('Password changed successfully');
         setPasswordData({
           currentPassword: '',
           newPassword: '',
-          confirmPassword: ''
+          confirmPassword: '',
         });
       }
     } catch (error) {
@@ -112,7 +107,7 @@ const Settings = () => {
 
     try {
       const response = await adminService.uploadAvatar(formData);
-      
+
       if (response.success) {
         toast.success('Avatar uploaded successfully');
         updateUser(response.data.user);
@@ -129,35 +124,33 @@ const Settings = () => {
     { id: 'profile', name: 'Profile', icon: UserIcon },
     { id: 'security', name: 'Security', icon: ShieldCheckIcon },
     { id: 'activity', name: 'Activity', icon: BellIcon },
-    { id: 'system', name: 'System', icon: CogIcon }
+    { id: 'system', name: 'System', icon: CogIcon },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600">Manage your account and preferences</p>
+        <h1 className="text-2xl font-semibold tracking-[-0.04em] text-ink">Settings</h1>
+        <p className="text-sm text-secondary-600">Manage your account and preferences</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Sidebar */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow">
-            <nav className="space-y-1">
+          <div className="rounded-2xl border border-hairline bg-white shadow-card">
+            <nav className="space-y-1 p-2">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                    className={`flex w-full items-center rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
                       activeTab === tab.id
-                        ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-700'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'bg-primary-900 text-white shadow-card'
+                        : 'text-secondary-600 hover:bg-surface hover:text-ink'
                     }`}
                   >
-                    <Icon className="h-5 w-5 mr-3" />
+                    <Icon className="mr-3 h-5 w-5" />
                     {tab.name}
                   </button>
                 );
@@ -166,216 +159,174 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Content */}
         <div className="lg:col-span-3">
-          {/* Profile Tab */}
           {activeTab === 'profile' && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-6">Profile Information</h2>
-              
-              <div className="flex items-center space-x-6 mb-6">
+            <div className="rounded-2xl border border-hairline bg-white p-6 shadow-card">
+              <h2 className="mb-6 text-lg font-medium text-ink">Profile information</h2>
+
+              <div className="mb-6 flex items-center space-x-6">
                 <div className="flex-shrink-0">
                   {user?.avatar ? (
-                    <img
-                      className="h-20 w-20 rounded-full"
-                      src={user.avatar}
-                      alt={user.name}
-                    />
+                    <img className="h-20 w-20 rounded-full object-cover" src={user.avatar} alt={user.name} />
                   ) : (
-                    <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center">
-                      <UserIcon className="h-10 w-10 text-gray-600" />
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-surface">
+                      <UserIcon className="h-10 w-10 text-secondary-600" />
                     </div>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Profile Picture
-                  </label>
+                  <label className="mb-2 block text-sm font-medium text-secondary-700">Profile picture</label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleAvatarUpload}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                    className="block w-full text-sm text-secondary-500 file:mr-4 file:rounded-full file:border-0 file:bg-surface file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-900 hover:file:bg-surface-soft"
                   />
                 </div>
               </div>
 
               <form onSubmit={handleProfileUpdate} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <Input
-                    label="Full Name"
+                    label="Full name"
                     value={profileData.name}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => setProfileData((prev) => ({ ...prev, name: e.target.value }))}
                     required
                   />
                   <Input
                     label="Email"
                     type="email"
                     value={profileData.email}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) => setProfileData((prev) => ({ ...prev, email: e.target.value }))}
                     required
                     disabled
                   />
                 </div>
                 <Input
-                  label="Phone Number"
+                  label="Phone number"
                   value={profileData.phone}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                  onChange={(e) => setProfileData((prev) => ({ ...prev, phone: e.target.value }))}
                 />
-                <Button
-                  type="submit"
-                  variant="primary"
-                  loading={loading}
-                  disabled={loading}
-                >
-                  Update Profile
+                <Button type="submit" variant="primary" loading={loading} disabled={loading}>
+                  Update profile
                 </Button>
               </form>
             </div>
           )}
 
-          {/* Security Tab */}
           {activeTab === 'security' && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-6">Security Settings</h2>
-              
-              <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+            <div className="rounded-2xl border border-hairline bg-white p-6 shadow-card">
+              <h2 className="mb-6 text-lg font-medium text-ink">Security settings</h2>
+
+              <form onSubmit={handlePasswordChange} className="max-w-md space-y-4">
                 <Input
-                  label="Current Password"
+                  label="Current password"
                   type="password"
                   value={passwordData.currentPassword}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                  onChange={(e) => setPasswordData((prev) => ({ ...prev, currentPassword: e.target.value }))}
                   required
                 />
                 <Input
-                  label="New Password"
+                  label="New password"
                   type="password"
                   value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  onChange={(e) => setPasswordData((prev) => ({ ...prev, newPassword: e.target.value }))}
                   required
                 />
                 <Input
-                  label="Confirm New Password"
+                  label="Confirm new password"
                   type="password"
                   value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  onChange={(e) => setPasswordData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
                   required
                 />
-                <Button
-                  type="submit"
-                  variant="primary"
-                  loading={loading}
-                  disabled={loading}
-                >
-                  Change Password
+                <Button type="submit" variant="primary" loading={loading} disabled={loading}>
+                  Change password
                 </Button>
               </form>
 
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="text-md font-medium text-gray-900 mb-4">Account Information</h3>
+              <div className="mt-8 border-t border-hairline pt-6">
+                <h3 className="mb-4 text-base font-medium text-ink">Account information</h3>
                 <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Role:</span>
-                    <span className="text-sm font-medium text-gray-900">{user?.role}</span>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-sm text-secondary-600">Role:</span>
+                    <span className="text-sm font-medium text-ink">{user?.role}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Member Since:</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {formatDate(user?.createdAt)}
-                    </span>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-sm text-secondary-600">Member since:</span>
+                    <span className="text-sm font-medium text-ink">{formatDate(user?.createdAt)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Last Login:</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {user?.lastLogin ? formatDate(user.lastLogin) : 'Never'}
-                    </span>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-sm text-secondary-600">Last login:</span>
+                    <span className="text-sm font-medium text-ink">{user?.lastLogin ? formatDate(user.lastLogin) : 'Never'}</span>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Activity Tab */}
           {activeTab === 'activity' && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-6">Recent Activity</h2>
-              
+            <div className="rounded-2xl border border-hairline bg-white p-6 shadow-card">
+              <h2 className="mb-6 text-lg font-medium text-ink">Recent activity</h2>
+
               <div className="space-y-4">
                 {activity.length > 0 ? (
                   activity.map((item, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                          <BellIcon className="h-4 w-4 text-primary-600" />
-                        </div>
+                    <div key={index} className="flex items-center gap-3 rounded-xl border border-hairline bg-surface p-4">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100">
+                        <BellIcon className="h-4 w-4 text-primary-900" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{item.action}</p>
-                        <p className="text-sm text-gray-500">{item.description}</p>
+                        <p className="text-sm font-medium text-ink">{item.action}</p>
+                        <p className="text-sm text-secondary-600">{item.description}</p>
                       </div>
-                      <div className="text-sm text-gray-500">
-                        {formatDate(item.timestamp)}
-                      </div>
+                      <div className="text-sm text-secondary-500">{formatDate(item.timestamp)}</div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8">
-                    <BellIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No recent activity</p>
+                  <div className="py-8 text-center">
+                    <BellIcon className="mx-auto mb-4 h-12 w-12 text-secondary-400" />
+                    <p className="text-sm text-secondary-500">No recent activity</p>
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {/* System Tab */}
           {activeTab === 'system' && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-6">System Information</h2>
-              
+            <div className="rounded-2xl border border-hairline bg-white p-6 shadow-card">
+              <h2 className="mb-6 text-lg font-medium text-ink">System information</h2>
+
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-md font-medium text-gray-900 mb-4">Platform Status</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                        <span className="text-sm font-medium text-green-800">API Operational</span>
+                  <h3 className="mb-4 text-base font-medium text-ink">Platform status</h3>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {[
+                      'API operational',
+                      'Database connected',
+                      'Payment gateway active',
+                      'Email service running',
+                    ].map((item) => (
+                      <div key={item} className="rounded-xl border border-success-200 bg-success-50 p-4">
+                        <div className="flex items-center">
+                          <div className="mr-3 h-3 w-3 rounded-full bg-success-600" />
+                          <span className="text-sm font-medium text-success-900">{item}</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                        <span className="text-sm font-medium text-green-800">Database Connected</span>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                        <span className="text-sm font-medium text-green-800">Payment Gateway Active</span>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                        <span className="text-sm font-medium text-green-800">Email Service Running</span>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-md font-medium text-gray-900 mb-4">Version Information</h3>
+                  <h3 className="mb-4 text-base font-medium text-ink">Version information</h3>
                   <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Platform Version:</span>
-                      <span className="text-sm font-medium text-gray-900">v1.0.0</span>
+                    <div className="flex justify-between gap-3">
+                      <span className="text-sm text-secondary-600">Platform version:</span>
+                      <span className="text-sm font-medium text-ink">v1.0.0</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Last Updated:</span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {formatDate(new Date())}
-                      </span>
+                    <div className="flex justify-between gap-3">
+                      <span className="text-sm text-secondary-600">Last updated:</span>
+                      <span className="text-sm font-medium text-ink">{formatDate(new Date())}</span>
                     </div>
                   </div>
                 </div>

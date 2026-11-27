@@ -52,87 +52,89 @@ const socketHandlers = requestSocket(io);
 app.set('io', io);
 app.set('socketHandlers', socketHandlers);
 
-// Connect to Database
-connectDB().then(async () => {
-  // Seed demo users
-  await seedDemoUsers();
+// Connect to Database (only if not running tests)
+if (process.env.NODE_ENV !== 'test') {
+  connectDB().then(async () => {
+    // Seed demo users
+    await seedDemoUsers();
 
-  const PORT = process.env.PORT || 4000;
-  
-  server.listen(PORT, () => {
-    logger.info(`🚀 Fixora-X API Server running on port ${PORT}`);
-    logger.info(`📚 API Documentation available at http://localhost:${PORT}/api-docs`);
-    logger.info(`🏥 Health check available at http://localhost:${PORT}/health`);
-    logger.info(`🌍 Environment: ${process.env.NODE_ENV}`);
+    const PORT = process.env.PORT || 4000;
     
-    // Log available endpoints
-    logger.info('Available endpoints:');
-    logger.info('  Authentication: /api/auth');
-    logger.info('  Customer APIs: /api/customer');
-    logger.info('  Mechanic APIs: /api/mechanic');
-    logger.info('  Admin APIs: /api/admin');
-    logger.info('  Payment APIs: /api/payments');
-    
-    // Log Socket.IO status
-    logger.info('🔌 Socket.IO server initialized');
-    logger.info('  Real-time features: Service requests, Location tracking, Status updates');
-  });
+    server.listen(PORT, () => {
+      logger.info(`🚀 Fixora-X API Server running on port ${PORT}`);
+      logger.info(`📚 API Documentation available at http://localhost:${PORT}/api-docs`);
+      logger.info(`🏥 Health check available at http://localhost:${PORT}/health`);
+      logger.info(`🌍 Environment: ${process.env.NODE_ENV}`);
+      
+      // Log available endpoints
+      logger.info('Available endpoints:');
+      logger.info('  Authentication: /api/auth');
+      logger.info('  Customer APIs: /api/customer');
+      logger.info('  Mechanic APIs: /api/mechanic');
+      logger.info('  Admin APIs: /api/admin');
+      logger.info('  Payment APIs: /api/payments');
+      
+      // Log Socket.IO status
+      logger.info('🔌 Socket.IO server initialized');
+      logger.info('  Real-time features: Service requests, Location tracking, Status updates');
+    });
 
-  // Socket.IO connection handling
-  io.on('connection', (socket) => {
-    logger.debug('Client connected:', socket.id);
-    
-    socket.on('disconnect', (reason) => {
-      logger.debug('Client disconnected:', {
-        socketId: socket.id,
-        reason
+    // Socket.IO connection handling
+    io.on('connection', (socket) => {
+      logger.debug('Client connected:', socket.id);
+      
+      socket.on('disconnect', (reason) => {
+        logger.debug('Client disconnected:', {
+          socketId: socket.id,
+          reason
+        });
+      });
+
+      socket.on('error', (error) => {
+        logger.error('Socket error:', {
+          socketId: socket.id,
+          error: error.message
+        });
       });
     });
 
-    socket.on('error', (error) => {
-      logger.error('Socket error:', {
-        socketId: socket.id,
-        error: error.message
-      });
-    });
+    // Schedule cleanup tasks
+    setInterval(async () => {
+      try {
+        // Clean up expired OTPs
+        const OTP = require('./src/models/OTP');
+        const cleanedOTPs = await OTP.cleanup();
+        if (cleanedOTPs > 0) {
+          logger.info(`Cleaned up ${cleanedOTPs} expired OTPs`);
+        }
+
+        // Clean up old upload files
+        const uploadService = require('./src/services/uploadService');
+        const cleanedFiles = await uploadService.cleanupTempFiles();
+        if (cleanedFiles > 0) {
+          logger.info(`Cleaned up ${cleanedFiles} temporary files`);
+        }
+
+        // Clean up old export files
+        const csvExportService = require('./src/utils/csvExport');
+        const cleanedExports = await csvExportService.cleanupOldExports();
+        if (cleanedExports > 0) {
+          logger.info(`Cleaned up ${cleanedExports} old export files`);
+        }
+
+      } catch (error) {
+        logger.error('Cleanup task failed:', error);
+      }
+    }, 60 * 60 * 1000); // Run every hour
+
+    // Setup graceful shutdown handlers
+    gracefulShutdown(server, io);
+
+  }).catch((error) => {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
   });
-
-  // Schedule cleanup tasks
-  setInterval(async () => {
-    try {
-      // Clean up expired OTPs
-      const OTP = require('./src/models/OTP');
-      const cleanedOTPs = await OTP.cleanup();
-      if (cleanedOTPs > 0) {
-        logger.info(`Cleaned up ${cleanedOTPs} expired OTPs`);
-      }
-
-      // Clean up old upload files
-      const uploadService = require('./src/services/uploadService');
-      const cleanedFiles = await uploadService.cleanupTempFiles();
-      if (cleanedFiles > 0) {
-        logger.info(`Cleaned up ${cleanedFiles} temporary files`);
-      }
-
-      // Clean up old export files
-      const csvExportService = require('./src/utils/csvExport');
-      const cleanedExports = await csvExportService.cleanupOldExports();
-      if (cleanedExports > 0) {
-        logger.info(`Cleaned up ${cleanedExports} old export files`);
-      }
-
-    } catch (error) {
-      logger.error('Cleanup task failed:', error);
-    }
-  }, 60 * 60 * 1000); // Run every hour
-
-  // Setup graceful shutdown handlers
-  gracefulShutdown(server, io);
-
-}).catch((error) => {
-  logger.error('Failed to start server:', error);
-  process.exit(1);
-});
+}
 
 // Export server for testing
 module.exports = server;

@@ -1,17 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { PaperAirplaneIcon, PaperClipIcon, PhotoIcon, TrashIcon } from '@heroicons/react/24/outline';
-import ConversationList from './ConversationList';
-import ChatMessage from './ChatMessage';
-import chatApi from '../../api/chatApi';
-import { useAuth } from '../../contexts/AuthContext';
-import toast from 'react-hot-toast';
-import socketService from '../../services/socketService';
+import {
+  PaperAirplaneIcon,
+  PaperClipIcon,
+  PhotoIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
+import chatApi from "../../api/chatApi";
+import { useAuth } from "../../contexts/AuthContext";
+import socketService from "../../services/socketService";
+import ChatMessage from "./ChatMessage";
+import ConversationList from "./ConversationList";
 
 const ChatInterface = ({ requestId = null }) => {
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
@@ -20,10 +25,10 @@ const ChatInterface = ({ requestId = null }) => {
   useEffect(() => {
     fetchConversations();
     setupSocketListeners();
-    
+
     return () => {
       // Cleanup socket listeners
-      socketService.off('new-message');
+      socketService.off("new-message");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -32,7 +37,7 @@ const ChatInterface = ({ requestId = null }) => {
   useEffect(() => {
     if (requestId && conversations.length > 0) {
       const targetConversation = conversations.find(
-        conv => conv.serviceRequest?._id === requestId
+        (conv) => conv.serviceRequest?._id === requestId,
       );
       if (targetConversation) {
         setSelectedConversation(targetConversation);
@@ -44,9 +49,10 @@ const ChatInterface = ({ requestId = null }) => {
     // Listen for new messages
     socketService.onNewMessage((data) => {
       if (selectedConversation) {
-        const roomId = selectedConversation.serviceRequest?._id || selectedConversation._id;
+        const roomId =
+          selectedConversation.serviceRequest?._id || selectedConversation._id;
         if (data.requestId === roomId || data.chatId === roomId) {
-          setMessages(prev => [...prev, data]);
+          setMessages((prev) => [...prev, data]);
         }
       }
     });
@@ -54,7 +60,8 @@ const ChatInterface = ({ requestId = null }) => {
 
   useEffect(() => {
     if (selectedConversation) {
-      const roomId = selectedConversation.serviceRequest?._id || selectedConversation._id;
+      const roomId =
+        selectedConversation.serviceRequest?._id || selectedConversation._id;
       fetchMessages(roomId);
     }
   }, [selectedConversation]);
@@ -64,7 +71,7 @@ const ChatInterface = ({ requestId = null }) => {
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const fetchConversations = async () => {
@@ -75,8 +82,8 @@ const ChatInterface = ({ requestId = null }) => {
         setConversations(response.data);
       }
     } catch (error) {
-      console.error('Error fetching conversations:', error);
-      toast.error('Failed to load conversations');
+      console.error("Error fetching conversations:", error);
+      toast.error("Failed to load conversations");
     } finally {
       setLoading(false);
     }
@@ -89,26 +96,27 @@ const ChatInterface = ({ requestId = null }) => {
         setMessages(response.data.messages);
       }
     } catch (error) {
-      console.error('Error fetching messages:', error);
-      toast.error('Failed to load messages');
+      console.error("Error fetching messages:", error);
+      toast.error("Failed to load messages");
     }
   };
 
   const handleConversationSelect = async (conversation) => {
     // Leave previous request room if any
     if (selectedConversation) {
-      const prevRoom = selectedConversation.serviceRequest?._id || selectedConversation._id;
+      const prevRoom =
+        selectedConversation.serviceRequest?._id || selectedConversation._id;
       socketService.leaveRequest(prevRoom);
     }
-    
+
     setSelectedConversation(conversation);
     setMessages([]);
-    
+
     // Join new request room for real-time updates
     if (conversation) {
       const newRoom = conversation.serviceRequest?._id || conversation._id;
       socketService.joinRequest(newRoom);
-      
+
       // Mark messages as read to clear the unread badge
       try {
         await chatApi.markAsRead(newRoom);
@@ -116,7 +124,7 @@ const ChatInterface = ({ requestId = null }) => {
         fetchConversations();
       } catch (err) {
         // Non-critical, don't block the UI
-        console.warn('markAsRead failed:', err);
+        console.warn("markAsRead failed:", err);
       }
     }
   };
@@ -125,40 +133,40 @@ const ChatInterface = ({ requestId = null }) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedConversation) return;
 
-    const roomId = selectedConversation.serviceRequest?._id || selectedConversation._id;
+    const roomId =
+      selectedConversation.serviceRequest?._id || selectedConversation._id;
     const isDirectChat = !selectedConversation.serviceRequest;
 
     try {
       setSending(true);
       const messageData = {
         content: newMessage.trim(),
-        messageType: 'text'
+        messageType: "text",
       };
 
       let response;
       if (isDirectChat) {
-        response = await chatApi.sendDirectMessage(selectedConversation._id, messageData);
+        response = await chatApi.sendDirectMessage(
+          selectedConversation._id,
+          messageData,
+        );
       } else {
         response = await chatApi.sendMessage(roomId, messageData);
       }
 
       if (response.success) {
-        setMessages(prev => [...prev, response.data]);
-        setNewMessage('');
-        
+        setMessages((prev) => [...prev, response.data]);
+        setNewMessage("");
+
         // Update conversation list to show new message
         fetchConversations();
-        
+
         // Also send via socket for real-time delivery
-        socketService.sendMessage(
-          roomId,
-          newMessage.trim(),
-          user.role
-        );
+        socketService.sendMessage(roomId, newMessage.trim(), user.role);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message');
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
     } finally {
       setSending(false);
     }
@@ -166,8 +174,8 @@ const ChatInterface = ({ requestId = null }) => {
 
   const getOtherParticipant = () => {
     if (!selectedConversation) return null;
-    
-    if (user.role === 'customer') {
+
+    if (user.role === "customer") {
       return selectedConversation.mechanic;
     } else {
       return selectedConversation.customer;
@@ -176,42 +184,50 @@ const ChatInterface = ({ requestId = null }) => {
 
   const handleDeleteChat = async () => {
     if (!selectedConversation) return;
-    const roomId = selectedConversation.serviceRequest?._id || selectedConversation._id;
-    if (!window.confirm('Delete all messages in this chat? This cannot be undone.')) return;
+    const roomId =
+      selectedConversation.serviceRequest?._id || selectedConversation._id;
+    if (
+      !window.confirm(
+        "Delete all messages in this chat? This cannot be undone.",
+      )
+    )
+      return;
     try {
       await chatApi.deleteChat(roomId);
       setMessages([]);
       fetchConversations();
-      toast.success('Chat cleared');
+      toast.success("Chat cleared");
     } catch (err) {
-      toast.error('Failed to delete chat');
+      toast.error("Failed to delete chat");
     }
   };
 
   const getServiceRequestTitle = (serviceRequest) => {
-    if (!serviceRequest) return 'Unknown Request';
-    
+    if (!serviceRequest) return "Unknown Request";
+
     const issueTypes = {
-      flat_tire: 'Flat Tire',
-      battery_dead: 'Dead Battery',
-      fuel_empty: 'Out of Fuel',
-      engine_trouble: 'Engine Trouble',
-      accident: 'Accident',
-      key_locked: 'Keys Locked',
-      overheating: 'Overheating',
-      brake_failure: 'Brake Failure',
-      transmission_issue: 'Transmission Issue',
-      other: 'Other Issue'
+      flat_tire: "Flat Tire",
+      battery_dead: "Dead Battery",
+      fuel_empty: "Out of Fuel",
+      engine_trouble: "Engine Trouble",
+      accident: "Accident",
+      key_locked: "Keys Locked",
+      overheating: "Overheating",
+      brake_failure: "Brake Failure",
+      transmission_issue: "Transmission Issue",
+      other: "Other Issue",
     };
-    
-    return issueTypes[serviceRequest.issueType] || 'Service Request';
+
+    return issueTypes[serviceRequest.issueType] || "Service Request";
   };
 
   return (
     <div className="flex h-full bg-white rounded-lg shadow-sm border">
       {/* Conversation List */}
-      <div className="w-1/3 border-r border-gray-200 p-4">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Conversations</h2>
+      <div className="w-1/3 border-r border-hairline p-4">
+        <h2 className="text-lg font-semibold text-ink mb-4">
+          Conversations
+        </h2>
         <ConversationList
           conversations={conversations}
           loading={loading}
@@ -225,26 +241,29 @@ const ChatInterface = ({ requestId = null }) => {
         {selectedConversation ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="p-4 border-b border-hairline bg-surface">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {getOtherParticipant()?.name || 'Unknown User'}
+                  <h3 className="font-semibold text-ink">
+                    {getOtherParticipant()?.name || "Unknown User"}
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-secondary-500">
                     {selectedConversation.serviceRequest
-                      ? getServiceRequestTitle(selectedConversation.serviceRequest)
-                      : 'Direct Message'}
+                      ? getServiceRequestTitle(
+                          selectedConversation.serviceRequest,
+                        )
+                      : "Direct Message"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">
-                    Status: {selectedConversation.serviceRequest?.status || 'Active'}
+                  <span className="text-sm text-secondary-500">
+                    Status:{" "}
+                    {selectedConversation.serviceRequest?.status || "Active"}
                   </span>
                   <button
                     onClick={handleDeleteChat}
                     title="Delete chat history"
-                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-1.5 text-secondary-400 hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors"
                   >
                     <TrashIcon className="h-4 w-4" />
                   </button>
@@ -256,7 +275,9 @@ const ChatInterface = ({ requestId = null }) => {
             <div className="flex-1 p-4 overflow-y-auto">
               {messages.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No messages yet. Start the conversation!</p>
+                  <p className="text-secondary-500">
+                    No messages yet. Start the conversation!
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -269,7 +290,7 @@ const ChatInterface = ({ requestId = null }) => {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-4 border-t border-hairline">
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <div className="flex-1 relative">
                   <input
@@ -277,20 +298,20 @@ const ChatInterface = ({ requestId = null }) => {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type your message..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full rounded-lg border border-hairline px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900 focus-visible:ring-offset-0 focus:border-primary-900"
                     disabled={sending}
                   />
                   <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
                     <button
                       type="button"
-                      className="p-1 text-gray-400 hover:text-gray-600"
+                      className="p-1 text-secondary-400 hover:text-secondary-600"
                       title="Attach file"
                     >
                       <PaperClipIcon className="w-4 h-4" />
                     </button>
                     <button
                       type="button"
-                      className="p-1 text-gray-400 hover:text-gray-600"
+                      className="p-1 text-secondary-400 hover:text-secondary-600"
                       title="Send image"
                     >
                       <PhotoIcon className="w-4 h-4" />
@@ -303,7 +324,7 @@ const ChatInterface = ({ requestId = null }) => {
                   className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <PaperAirplaneIcon className="w-4 h-4" />
-                  {sending ? 'Sending...' : 'Send'}
+                  {sending ? "Sending..." : "Send"}
                 </button>
               </form>
             </div>
@@ -311,7 +332,9 @@ const ChatInterface = ({ requestId = null }) => {
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <p className="text-gray-500 text-lg">Select a conversation to start chatting</p>
+              <p className="text-secondary-500 text-lg">
+                Select a conversation to start chatting
+              </p>
             </div>
           </div>
         )}

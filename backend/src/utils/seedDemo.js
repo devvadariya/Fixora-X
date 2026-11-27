@@ -19,7 +19,11 @@ const seedDemoUsers = async () => {
         phone: '1234567891',
         passwordHash: 'DemoMac123!',
         role: 'mechanic',
-        isVerified: true
+        isVerified: true,
+        location: {
+          lat: 12.9716,
+          lng: 77.5946
+        }
       },
       {
         name: 'Fixora Admin',
@@ -47,6 +51,9 @@ const seedDemoUsers = async () => {
         user.role = account.role;
         user.isVerified = account.isVerified;
         user.isActive = true;
+        if (account.location) {
+          user.location = account.location;
+        }
         await user.save();
         logger.info(`Demo user updated: ${account.email} (${account.role})`);
       }

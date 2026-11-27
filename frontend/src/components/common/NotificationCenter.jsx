@@ -148,7 +148,7 @@ const NotificationCenter = () => {
       case 'request_assigned':
         return 'bg-primary-50 border-primary-200';
       default:
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-primary-50 border-primary-200';
     }
   };
 
@@ -177,7 +177,7 @@ const NotificationCenter = () => {
           />
           
           {/* Panel */}
-          <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-secondary-200 z-50 max-h-96 overflow-hidden">
+          <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-card-hover border border-secondary-200 z-50 max-h-96 overflow-hidden">
             {/* Header */}
             <div className="p-4 border-b border-secondary-200">
               <div className="flex items-center justify-between">

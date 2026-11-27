@@ -1,4 +1,4 @@
-import { io } from 'socket.io-client';
+import { io } from "socket.io-client";
 
 class SocketService {
   constructor() {
@@ -14,18 +14,24 @@ class SocketService {
     }
 
     // Connect to main socket
-    this.socket = io(process.env.REACT_APP_SOCKET_URL || 'http://localhost:4000', {
-      auth: { token },
-      transports: ['websocket', 'polling'],
-      timeout: 20000,
-    });
+    this.socket = io(
+      process.env.REACT_APP_SOCKET_URL || "http://localhost:4000",
+      {
+        auth: { token },
+        transports: ["websocket", "polling"],
+        timeout: 20000,
+      },
+    );
 
     // Connect to requests namespace
-    this.requestNamespace = io(`${process.env.REACT_APP_SOCKET_URL || 'http://localhost:4000'}/requests`, {
-      auth: { token },
-      transports: ['websocket', 'polling'],
-      timeout: 20000,
-    });
+    this.requestNamespace = io(
+      `${process.env.REACT_APP_SOCKET_URL || "http://localhost:4000"}/requests`,
+      {
+        auth: { token },
+        transports: ["websocket", "polling"],
+        timeout: 20000,
+      },
+    );
 
     this.setupEventListeners();
   }
@@ -34,37 +40,34 @@ class SocketService {
   setupEventListeners() {
     if (!this.socket) return;
 
-    this.socket.on('connect', () => {
-      console.log('Main socket connected:', this.socket.id);
+    this.socket.on("connect", () => {
       this.isConnected = true;
     });
 
-    this.socket.on('disconnect', (reason) => {
-      console.log('Main socket disconnected:', reason);
+    this.socket.on("disconnect", (reason) => {
       this.isConnected = false;
     });
 
-    this.socket.on('connect_error', (error) => {
-      console.error('Main socket connection error:', error);
+    this.socket.on("connect_error", (error) => {
+      console.error("Main socket connection error:", error);
       this.isConnected = false;
     });
 
-    this.socket.on('error', (error) => {
-      console.error('Main socket error:', error);
+    this.socket.on("error", (error) => {
+      console.error("Main socket error:", error);
     });
 
-    // Setup request namespace listeners
     if (this.requestNamespace) {
-      this.requestNamespace.on('connect', () => {
-        console.log('Request namespace connected:', this.requestNamespace.id);
+      this.requestNamespace.on("connect", () => {
+        this.isConnected = true;
       });
 
-      this.requestNamespace.on('disconnect', (reason) => {
-        console.log('Request namespace disconnected:', reason);
+      this.requestNamespace.on("disconnect", (reason) => {
+        this.isConnected = false;
       });
 
-      this.requestNamespace.on('connect_error', (error) => {
-        console.error('Request namespace connection error:', error);
+      this.requestNamespace.on("connect_error", (error) => {
+        console.error("Request namespace connection error:", error);
       });
     }
   }
@@ -72,39 +75,35 @@ class SocketService {
   // Join user to their personal room
   joinUserRoom(userId) {
     if (this.requestNamespace && this.requestNamespace.connected) {
-      this.requestNamespace.emit('join-user-room', userId);
-      console.log('Joined user room:', userId);
+      this.requestNamespace.emit("join-user-room", userId);
     }
   }
 
   // Join mechanic to their service area
   joinMechanicArea(mechanicId, location) {
     if (this.requestNamespace && this.requestNamespace.connected) {
-      this.requestNamespace.emit('join-mechanic-area', mechanicId, location);
-      console.log('Joined mechanic area:', mechanicId, location);
+      this.requestNamespace.emit("join-mechanic-area", mechanicId, location);
     }
   }
 
   // Join a service request room for real-time updates
   joinRequest(requestId) {
     if (this.requestNamespace && this.requestNamespace.connected) {
-      this.requestNamespace.emit('join_request', { requestId });
-      console.log('Joined request room:', requestId);
+      this.requestNamespace.emit("join_request", { requestId });
     }
   }
 
   // Leave a service request room
   leaveRequest(requestId) {
     if (this.requestNamespace && this.requestNamespace.connected) {
-      this.requestNamespace.emit('leave_request', { requestId });
-      console.log('Left request room:', requestId);
+      this.requestNamespace.emit("leave_request", { requestId });
     }
   }
 
   // Update location (for mechanics)
   updateLocation(location) {
     if (this.requestNamespace && this.requestNamespace.connected) {
-      this.requestNamespace.emit('location-update', {
+      this.requestNamespace.emit("location-update", {
         lat: location.lat,
         lng: location.lng,
         accuracy: location.accuracy || 10,
@@ -113,9 +112,9 @@ class SocketService {
   }
 
   // Send chat message
-  sendMessage(requestId, message, sender = 'customer') {
+  sendMessage(requestId, message, sender = "customer") {
     if (this.requestNamespace && this.requestNamespace.connected) {
-      this.requestNamespace.emit('send-message', {
+      this.requestNamespace.emit("send-message", {
         requestId,
         message,
         sender,
@@ -127,7 +126,7 @@ class SocketService {
   // Send emergency alert
   sendEmergencyAlert(requestId, alertType, location) {
     if (this.requestNamespace && this.requestNamespace.connected) {
-      this.requestNamespace.emit('emergency-alert', {
+      this.requestNamespace.emit("emergency-alert", {
         requestId,
         type: alertType,
         location,
@@ -139,70 +138,70 @@ class SocketService {
   // Listen for request updates
   onRequestUpdate(callback) {
     if (this.requestNamespace) {
-      this.requestNamespace.on('request_updated', callback);
+      this.requestNamespace.on("request_updated", callback);
     }
   }
 
   // Listen for location updates
   onLocationUpdate(callback) {
     if (this.requestNamespace) {
-      this.requestNamespace.on('location_updated', callback);
+      this.requestNamespace.on("location_updated", callback);
     }
   }
 
   // Listen for new messages
   onNewMessage(callback) {
     if (this.requestNamespace) {
-      this.requestNamespace.on('new-message', callback);
+      this.requestNamespace.on("new-message", callback);
     }
   }
 
   // Listen for emergency alerts
   onEmergencyAlert(callback) {
     if (this.requestNamespace) {
-      this.requestNamespace.on('emergency-alert', callback);
+      this.requestNamespace.on("emergency-alert", callback);
     }
   }
 
   // Listen for mechanic assigned
   onMechanicAssigned(callback) {
     if (this.requestNamespace) {
-      this.requestNamespace.on('mechanic_assigned', callback);
+      this.requestNamespace.on("mechanic_assigned", callback);
     }
   }
 
   // Listen for service started
   onServiceStarted(callback) {
     if (this.requestNamespace) {
-      this.requestNamespace.on('service_started', callback);
+      this.requestNamespace.on("service_started", callback);
     }
   }
 
   // Listen for service completed
   onServiceCompleted(callback) {
     if (this.requestNamespace) {
-      this.requestNamespace.on('service_completed', callback);
+      this.requestNamespace.on("service_completed", callback);
     }
   }
 
   // Listen for new request available (for mechanics)
   onNewRequestAvailable(callback) {
     if (this.requestNamespace) {
-      this.requestNamespace.on('new-request-available', callback);
+      this.requestNamespace.on("new-request-available", callback);
     }
   }
 
   // Listen for request taken (for mechanics)
   onRequestTaken(callback) {
     if (this.requestNamespace) {
-      this.requestNamespace.on('request-taken', callback);
+      this.requestNamespace.on("request-taken", callback);
     }
   }
 
   // Listen for request accepted (for customers)
   onRequestAccepted(callback) {
     if (this.requestNamespace) {
-      this.requestNamespace.on('request-accepted', callback);
+      this.requestNamespace.on("request-accepted", callback);
     }
   }
 

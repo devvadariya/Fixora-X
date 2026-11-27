@@ -434,29 +434,23 @@ class UploadService {
   }
 
   // Get upload statistics
-  async getUploadStats(startDate, endDate) {
-    try {
-      // This would query a database in production
-      // For hackathon, return mock data
-      return {
-        totalUploads: 150,
-        totalSize: 52428800, // 50MB
-        imageUploads: 140,
-        documentUploads: 10,
-        failedUploads: 5,
-        averageFileSize: 349525, // ~340KB
-        peakUploadHour: 14, // 2 PM
-        topFileTypes: [
-          { type: 'image/jpeg', count: 85 },
-          { type: 'image/png', count: 55 },
-          { type: 'application/pdf', count: 10 }
-        ]
-      };
-
-    } catch (error) {
-      logger.error('Failed to get upload stats:', error);
-      throw error;
-    }
+  async getUploadStats(_startDate, _endDate) {
+    // This would query a database in production
+    // For hackathon, return mock data
+    return {
+      totalUploads: 150,
+      totalSize: 52428800, // 50MB
+      imageUploads: 140,
+      documentUploads: 10,
+      failedUploads: 5,
+      averageFileSize: 349525, // ~340KB
+      peakUploadHour: 14, // 2 PM
+      topFileTypes: [
+        { type: 'image/jpeg', count: 85 },
+        { type: 'image/png', count: 55 },
+        { type: 'application/pdf', count: 10 }
+      ]
+    };
   }
 }
 

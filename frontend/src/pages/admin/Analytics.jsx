@@ -6,7 +6,7 @@ import {
   UsersIcon,
   WrenchScrewdriverIcon,
   CurrencyDollarIcon,
-  ClockIcon
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import adminService from '../../services/adminService';
 import { formatCurrency } from '../../utils/helpers';
@@ -29,8 +29,8 @@ const Analytics = () => {
       revenueGrowth: 0,
       userGrowth: 0,
       requestGrowth: 0,
-      responseTimeChange: 0
-    }
+      responseTimeChange: 0,
+    },
   });
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30d');
@@ -41,23 +41,25 @@ const Analytics = () => {
       const response = await adminService.getAnalytics(period);
 
       if (response.success) {
-        setAnalytics(response.data || {
-          userGrowth: [],
-          revenueData: [],
-          requestTrends: [],
-          topMechanics: [],
-          popularServices: [],
-          summary: {
-            totalRevenue: 0,
-            totalUsers: 0,
-            totalRequests: 0,
-            avgResponseTime: 0,
-            revenueGrowth: 0,
-            userGrowth: 0,
-            requestGrowth: 0,
-            responseTimeChange: 0
-          }
-        });
+        setAnalytics(
+          response.data || {
+            userGrowth: [],
+            revenueData: [],
+            requestTrends: [],
+            topMechanics: [],
+            popularServices: [],
+            summary: {
+              totalRevenue: 0,
+              totalUsers: 0,
+              totalRequests: 0,
+              avgResponseTime: 0,
+              revenueGrowth: 0,
+              userGrowth: 0,
+              requestGrowth: 0,
+              responseTimeChange: 0,
+            },
+          },
+        );
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -76,8 +78,8 @@ const Analytics = () => {
           revenueGrowth: 0,
           userGrowth: 0,
           requestGrowth: 0,
-          responseTimeChange: 0
-        }
+          responseTimeChange: 0,
+        },
       });
     } finally {
       setLoading(false);
@@ -91,294 +93,149 @@ const Analytics = () => {
   const getGrowthIcon = (percentage) => {
     const num = parseFloat(percentage || 0);
     if (num > 0) {
-      return <ArrowTrendingUpIcon className="h-4 w-4 text-green-600" />;
+      return <ArrowTrendingUpIcon className="h-4 w-4 text-success-700" />;
     } else if (num < 0) {
-      return <ArrowTrendingDownIcon className="h-4 w-4 text-red-600" />;
+      return <ArrowTrendingDownIcon className="h-4 w-4 text-danger-700" />;
     }
-    return <ChartBarIcon className="h-4 w-4 text-gray-600" />;
+    return <ChartBarIcon className="h-4 w-4 text-secondary-500" />;
   };
 
   const getGrowthColor = (percentage) => {
     const num = parseFloat(percentage || 0);
-    if (num > 0) return 'text-green-600';
-    if (num < 0) return 'text-red-600';
-    return 'text-gray-600';
-  };
-
-  const formatChartData = (data, key) => {
-    return data.map(item => ({
-      date: `${item._id.month}/${item._id.day}`,
-      value: item[key] || 0
-    }));
-  };
-
-  const renderSimpleChart = (data, title, color = 'blue') => {
-    if (!data || data.length === 0) {
-      return (
-        <div className="text-center py-8">
-          <ChartBarIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-500">No data available</p>
-        </div>
-      );
-    }
-
-    const maxValue = Math.max(...data.map(item => item.value));
-    const minValue = Math.min(...data.map(item => item.value));
-
-    return (
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium text-gray-700">{title}</h4>
-        <div className="flex items-end space-x-1 h-32">
-          {data.map((item, index) => {
-            const height = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
-            return (
-              <div key={index} className="flex-1 flex flex-col items-center">
-                <div
-                  className={`w-full bg-${color}-500 rounded-t`}
-                  style={{ height: `${Math.max(height, 2)}%` }}
-                ></div>
-                <span className="text-xs text-gray-500 mt-1">{item.date}</span>
-              </div>
-            );
-          })}
-        </div>
-        <div className="flex justify-between text-xs text-gray-500">
-          <span>Min: {minValue}</span>
-          <span>Max: {maxValue}</span>
-        </div>
-      </div>
-    );
+    if (num > 0) return 'text-success-700';
+    if (num < 0) return 'text-danger-700';
+    return 'text-secondary-600';
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary-900" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-gray-600">Monitor key metrics and performance indicators</p>
+          <h1 className="text-2xl font-semibold tracking-[-0.04em] text-ink">Analytics dashboard</h1>
+          <p className="text-sm text-secondary-600">Monitor key metrics and performance indicators</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <Select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            className="w-32"
-          >
+        <div className="flex items-center gap-3">
+          <Select value={period} onChange={(e) => setPeriod(e.target.value)} className="w-36">
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
             <option value="90d">Last 90 days</option>
             <option value="1y">Last year</option>
           </Select>
-          <Button
-            variant="secondary"
-            onClick={fetchAnalytics}
-            disabled={loading}
-          >
+          <Button variant="secondary" onClick={fetchAnalytics} disabled={loading}>
             Refresh
           </Button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <CurrencyDollarIcon className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(analytics.summary?.totalRevenue || 0)}
-              </p>
-              <div className="flex items-center mt-1">
-                {getGrowthIcon(analytics.summary?.revenueGrowth)}
-                <span className={`text-sm ml-1 ${getGrowthColor(analytics.summary?.revenueGrowth)}`}>
-                  {analytics.summary?.revenueGrowth || 0}% from last period
-                </span>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+        {[
+          {
+            label: 'Total Revenue',
+            value: formatCurrency(analytics.summary?.totalRevenue || 0),
+            delta: `${analytics.summary?.revenueGrowth || 0}% from last period`,
+            icon: CurrencyDollarIcon,
+            tone: 'bg-primary-100 text-primary-900',
+            deltaTone: getGrowthColor(analytics.summary?.revenueGrowth),
+            deltaIcon: getGrowthIcon(analytics.summary?.revenueGrowth),
+          },
+          {
+            label: 'Total Users',
+            value: (analytics.summary?.totalUsers || 0).toLocaleString(),
+            delta: `${analytics.summary?.userGrowth || 0}% from last period`,
+            icon: UsersIcon,
+            tone: 'bg-success-50 text-success-700',
+            deltaTone: getGrowthColor(analytics.summary?.userGrowth),
+            deltaIcon: getGrowthIcon(analytics.summary?.userGrowth),
+          },
+          {
+            label: 'Total Requests',
+            value: (analytics.summary?.totalRequests || 0).toLocaleString(),
+            delta: `${analytics.summary?.requestGrowth || 0}% from last period`,
+            icon: WrenchScrewdriverIcon,
+            tone: 'bg-warning-50 text-warning-700',
+            deltaTone: getGrowthColor(analytics.summary?.requestGrowth),
+            deltaIcon: getGrowthIcon(analytics.summary?.requestGrowth),
+          },
+          {
+            label: 'Avg Response Time',
+            value: `${analytics.summary?.avgResponseTime || 0} min`,
+            delta: `${analytics.summary?.responseTimeChange || 0}% from last period`,
+            icon: ClockIcon,
+            tone: 'bg-surface text-primary-900',
+            deltaTone: getGrowthColor(analytics.summary?.responseTimeChange),
+            deltaIcon: getGrowthIcon(analytics.summary?.responseTimeChange),
+          },
+        ].map(({ label, value, delta, icon: Icon, tone, deltaTone, deltaIcon }) => (
+          <div key={label} className="rounded-2xl border border-hairline bg-white p-5 shadow-card">
+            <div className="flex items-start gap-4">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${tone}`}>
+                <Icon className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-secondary-700">{label}</p>
+                <p className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-ink">{value}</p>
+                <div className="mt-1 flex items-center gap-1 text-sm">
+                  {deltaIcon}
+                  <span className={deltaTone}>{delta}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <UsersIcon className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {(analytics.summary?.totalUsers || 0).toLocaleString()}
-              </p>
-              <div className="flex items-center mt-1">
-                {getGrowthIcon(analytics.summary?.userGrowth)}
-                <span className={`text-sm ml-1 ${getGrowthColor(analytics.summary?.userGrowth)}`}>
-                  {analytics.summary?.userGrowth || 0}% from last period
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <WrenchScrewdriverIcon className="h-6 w-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Requests</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {(analytics.summary?.totalRequests || 0).toLocaleString()}
-              </p>
-              <div className="flex items-center mt-1">
-                {getGrowthIcon(analytics.summary?.requestGrowth)}
-                <span className={`text-sm ml-1 ${getGrowthColor(analytics.summary?.requestGrowth)}`}>
-                  {analytics.summary?.requestGrowth || 0}% from last period
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <ClockIcon className="h-6 w-6 text-orange-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Avg Response Time</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {analytics.summary?.avgResponseTime || 0} min
-              </p>
-              <div className="flex items-center mt-1">
-                {getGrowthIcon(analytics.summary?.responseTimeChange)}
-                <span className={`text-sm ml-1 ${getGrowthColor(analytics.summary?.responseTimeChange)}`}>
-                  {analytics.summary?.responseTimeChange || 0}% from last period
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-
-        {/* Service Distribution Chart */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Service Distribution</h3>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-hairline bg-white p-6 shadow-card">
+          <h3 className="text-lg font-medium text-ink">Service distribution</h3>
           {analytics.popularServices && analytics.popularServices.length > 0 ? (
-            <div className="space-y-3">
+            <div className="mt-4 space-y-4">
               {analytics.popularServices.slice(0, 5).map((service, index) => {
                 const percentage = service.percentage || 0;
                 return (
-                  <div key={service._id || index} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium text-gray-700">
+                  <div key={service._id || index} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-secondary-700">
                         {service._id?.replace('_', ' ').toUpperCase() || 'Unknown'}
                       </span>
-                      <span className="text-gray-500">{service.count || 0} requests</span>
+                      <span className="text-secondary-500">{service.count || 0} requests</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${Math.min(percentage, 100)}%` }}
-                      ></div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-surface">
+                      <div className="h-full rounded-full bg-primary-900" style={{ width: `${Math.min(percentage, 100)}%` }} />
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <ChartBarIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-500">No service data available</p>
+            <div className="py-8 text-center text-sm text-secondary-500">
+              <ChartBarIcon className="mx-auto mb-2 h-10 w-10 text-secondary-400" />
+              No service data available
             </div>
           )}
         </div>
-      </div>
 
-      {/* Top Mechanics */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Top Performing Mechanics</h3>
-        </div>
-        <div className="p-6">
-          {analytics.topMechanics && analytics.topMechanics.length > 0 ? (
-            <div className="space-y-4">
-              {analytics.topMechanics.map((mechanic, index) => (
-                <div key={mechanic._id || index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-600">
-                      {index + 1}
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">{mechanic.name || 'Unknown'}</p>
-                      <p className="text-sm text-gray-500">{mechanic.completedRequests || 0} requests completed</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">
-                      {formatCurrency(mechanic.totalEarnings || 0)}
-                    </p>
-                    <p className="text-sm text-gray-500">⭐ {mechanic.rating?.toFixed(1) || 'N/A'}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No mechanic data available</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Popular Services */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Popular Services</h3>
-        </div>
-        <div className="p-6">
-          {analytics.popularServices && analytics.popularServices.length > 0 ? (
-            <div className="space-y-4">
-              {analytics.popularServices.map((service, index) => (
-                <div key={service._id || index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-sm font-medium text-green-600">
-                      {index + 1}
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
-                        {service._id?.replace('_', ' ').toUpperCase() || 'Unknown Service'}
-                      </p>
-                      <p className="text-sm text-gray-500">{service.count || 0} requests</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">
-                      {formatCurrency(service.totalRevenue || 0)}
-                    </p>
-                    <p className="text-sm text-gray-500">{service.percentage?.toFixed(1) || 0}% of total</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No service data available</p>
-            </div>
-          )}
+        <div className="rounded-2xl border border-hairline bg-white p-6 shadow-card">
+          <h3 className="text-lg font-medium text-ink">Operational snapshot</h3>
+          <div className="mt-4 space-y-3">
+            {[
+              { label: 'Average response time', value: `${analytics.summary?.avgResponseTime || 0} mins` },
+              { label: 'Platform alerts', value: analytics.pendingVerifications ? `${analytics.pendingVerifications} pending` : 'All clear' },
+              { label: 'Growers', value: `${analytics.summary?.userGrowth || 0}% user growth` },
+            ].map((stat) => (
+              <div key={stat.label} className="flex items-center justify-between rounded-xl border border-hairline bg-surface px-4 py-3">
+                <span className="text-sm text-secondary-600">{stat.label}</span>
+                <span className="text-sm font-medium text-ink">{stat.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

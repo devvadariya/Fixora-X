@@ -356,7 +356,7 @@ const VerificationForm = ({ onSuccess }) => {
           {config.icon}
           <div>
             <h3 className={`font-medium ${config.color}`}>{config.title}</h3>
-            <p className="text-sm text-gray-600">{config.description}</p>
+            <p className="text-sm text-secondary-600">{config.description}</p>
           </div>
         </div>
       </div>
@@ -391,7 +391,7 @@ const VerificationForm = ({ onSuccess }) => {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Shop Verification</h2>
-          <p className="text-gray-600">
+          <p className="text-secondary-600">
             Please provide your shop details and upload required documents for verification.
           </p>
         </div>
@@ -467,7 +467,7 @@ const VerificationForm = ({ onSuccess }) => {
             {/* Location Fields */}
             <div className="space-y-4">
               <h4 className="text-md font-medium">Shop Location</h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-secondary-600">
                 Please provide the exact coordinates of your shop location. This helps customers find your shop easily.
               </p>
               
@@ -506,7 +506,7 @@ const VerificationForm = ({ onSuccess }) => {
                 >
                   Get Current Location
                 </Button>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-secondary-500">
                   Click to automatically get your current location
                 </span>
               </div>
@@ -557,17 +557,17 @@ const VerificationForm = ({ onSuccess }) => {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Shop Image <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Shop Image <span className="text-danger-600">*</span>
                 </label>
                 <div className="flex items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-hairline border-dashed rounded-lg cursor-pointer bg-surface hover:bg-surface">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <CameraIcon className="w-8 h-8 mb-2 text-gray-400" />
-                      <p className="mb-2 text-sm text-gray-500">
+                      <CameraIcon className="w-8 h-8 mb-2 text-secondary-400" />
+                      <p className="mb-2 text-sm text-secondary-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      <p className="text-xs text-secondary-500">PNG, JPG, GIF up to 10MB</p>
                     </div>
                     <input
                       type="file"
@@ -582,7 +582,7 @@ const VerificationForm = ({ onSuccess }) => {
                 </div>
                 {files.shopImage && (
                   <div className="mt-2">
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-sm text-secondary-600 mb-2">
                       Selected: {files.shopImage.name}
                     </p>
                     <div className="w-32 h-24 border rounded overflow-hidden">
@@ -595,22 +595,22 @@ const VerificationForm = ({ onSuccess }) => {
                   </div>
                 )}
                 {errors.shopImage && (
-                  <p className="mt-1 text-sm text-red-600">{errors.shopImage}</p>
+                  <p className="mt-1 text-sm text-danger-700">{errors.shopImage}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Document Image <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Document Image <span className="text-danger-600">*</span>
                 </label>
                 <div className="flex items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-hairline border-dashed rounded-lg cursor-pointer bg-surface hover:bg-surface">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <DocumentIcon className="w-8 h-8 mb-2 text-gray-400" />
-                      <p className="mb-2 text-sm text-gray-500">
+                      <DocumentIcon className="w-8 h-8 mb-2 text-secondary-400" />
+                      <p className="mb-2 text-sm text-secondary-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF, PDF up to 10MB</p>
+                      <p className="text-xs text-secondary-500">PNG, JPG, GIF, PDF up to 10MB</p>
                     </div>
                     <input
                       type="file"
@@ -625,7 +625,7 @@ const VerificationForm = ({ onSuccess }) => {
                 </div>
                 {files.documentImage && (
                   <div className="mt-2">
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-sm text-secondary-600 mb-2">
                       Selected: {files.documentImage.name}
                     </p>
                     {files.documentImage.type.startsWith('image/') ? (
@@ -637,25 +637,25 @@ const VerificationForm = ({ onSuccess }) => {
                         />
                       </div>
                     ) : (
-                      <div className="w-32 h-24 border rounded bg-gray-100 flex items-center justify-center">
-                        <DocumentIcon className="w-8 h-8 text-gray-400" />
+                      <div className="w-32 h-24 border rounded bg-surface flex items-center justify-center">
+                        <DocumentIcon className="w-8 h-8 text-secondary-400" />
                       </div>
                     )}
                   </div>
                 )}
                 {errors.documentImage && (
-                  <p className="mt-1 text-sm text-red-600">{errors.documentImage}</p>
+                  <p className="mt-1 text-sm text-danger-700">{errors.documentImage}</p>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
             <div className="flex items-start space-x-3">
-              <ExclamationTriangleIcon className="h-5 w-5 text-blue-500 mt-0.5" />
+              <ExclamationTriangleIcon className="h-5 w-5 text-primary-900 mt-0.5" />
               <div>
-                <h4 className="text-sm font-medium text-blue-800">Important Notes</h4>
-                <ul className="mt-2 text-sm text-blue-700 space-y-1">
+                <h4 className="text-sm font-medium text-primary-900">Important Notes</h4>
+                <ul className="mt-2 text-sm text-primary-900 space-y-1">
                   <li>• Ensure all images are clear and readable</li>
                   <li>• Shop image should show your workshop/garage</li>
                   <li>• Document image should be a valid government ID</li>

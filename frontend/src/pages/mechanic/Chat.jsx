@@ -1,44 +1,54 @@
-import React from 'react';
-import { useSearchParams } from 'react-router-dom';
-import ChatInterface from '../../components/chat/ChatInterface';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { Link } from 'react-router-dom';
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { Link, useSearchParams } from "react-router-dom";
+import ChatInterface from "../../components/chat/ChatInterface";
+import Card from "../../components/common/Card";
+import MechanicSurface from "../../components/mechanic/MechanicSurface";
 
 const Chat = () => {
   const [searchParams] = useSearchParams();
-  const requestId = searchParams.get('requestId');
+  const requestId = searchParams.get("requestId");
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6">
-        <div className="flex items-center gap-4">
-          {requestId && (
-            <Link 
-              to="/mechanic/requests"
-              className="flex items-center gap-2 text-primary-600 hover:text-primary-700"
-            >
-              <ArrowLeftIcon className="w-5 h-5" />
-              Back to Requests
-            </Link>
-          )}
+    <MechanicSurface
+      eyebrow="Messages"
+      title={requestId ? "Service request chat" : "Customer messages"}
+      description={
+        requestId
+          ? "Keep the conversation attached to the current job."
+          : "Keep conversations tied to the request so context never gets lost."
+      }
+      stats={[
+        { value: requestId ? "Live" : "Inbox", label: "conversation mode" },
+        { value: "1", label: "workspace" },
+      ]}
+    >
+      <Card className="p-0 overflow-hidden">
+        <div className="flex flex-col gap-4 border-b border-hairline px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {requestId ? 'Service Request Chat' : 'Messages'}
-            </h1>
-            <p className="text-gray-600 mt-2">
-              {requestId 
-                ? 'Chat with customer about this service request'
-                : 'Chat with customers about their service requests'
-              }
+            <p className="text-sm font-semibold text-primary-900">
+              {requestId ? "Current service request" : "Message inbox"}
+            </p>
+            <p className="mt-1 text-sm text-secondary-600">
+              {requestId
+                ? "Use this thread to confirm updates and arrival timing."
+                : "Use this space to handle customer follow-ups."}
             </p>
           </div>
+          {requestId && (
+            <Link
+              to="/mechanic/requests"
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary-900"
+            >
+              <ArrowLeftIcon className="w-4 h-4" />
+              Back to requests
+            </Link>
+          )}
         </div>
-      </div>
-      
-      <div className="h-[600px]">
-        <ChatInterface requestId={requestId} />
-      </div>
-    </div>
+        <div className="h-[70vh] min-h-[520px]">
+          <ChatInterface requestId={requestId} />
+        </div>
+      </Card>
+    </MechanicSurface>
   );
 };
 

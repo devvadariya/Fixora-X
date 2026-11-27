@@ -101,15 +101,6 @@ const mechanicApi = {
     }
   },
 
-  redeemWallet: async (data) => {
-    try {
-      const response = await apiClient.post('/mechanic/wallet/redeem', data);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
   // Service Areas
   getServiceAreas: async () => {
     try {

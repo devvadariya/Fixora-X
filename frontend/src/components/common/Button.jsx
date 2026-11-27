@@ -1,60 +1,70 @@
-import React from 'react';
-
 const Button = ({
   children,
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   loading = false,
   disabled = false,
-  className = '',
+  className = "",
   icon,
-  iconPosition = 'left',
+  iconPosition = "left",
   fullWidth = false,
   ...props
 }) => {
-  // Base button classes
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses =
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-full font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 sm:min-h-10";
 
-  // Variant classes
   const variantClasses = {
-    primary: 'bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500',
-    secondary: 'bg-secondary-200 hover:bg-secondary-300 text-secondary-800 focus:ring-secondary-500',
-    success: 'bg-success-600 hover:bg-success-700 text-white focus:ring-success-500',
-    warning: 'bg-warning-600 hover:bg-warning-700 text-white focus:ring-warning-500',
-    danger: 'bg-danger-600 hover:bg-danger-700 text-white focus:ring-danger-500',
-    outline: 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500',
-    'outline-danger': 'border-2 border-danger-600 text-danger-600 hover:bg-danger-50 focus:ring-danger-500',
-    'outline-success': 'border-2 border-success-600 text-success-600 hover:bg-success-50 focus:ring-success-500',
-    ghost: 'text-primary-600 hover:bg-primary-50 focus:ring-primary-500',
+    primary:
+      "bg-primary-900 text-white focus-visible:ring-primary-900 active:bg-charcoal",
+    secondary:
+      "border border-primary-900 bg-white text-primary-900 focus-visible:ring-primary-900 active:bg-surface",
+    tertiary:
+      "border border-hairline bg-white text-primary-900 focus-visible:ring-primary-900 active:bg-surface",
+    success:
+      "bg-success-600 text-white focus-visible:ring-success-600 active:bg-success-700",
+    warning:
+      "bg-warning-600 text-white focus-visible:ring-warning-600 active:bg-warning-700",
+    danger:
+      "bg-danger-600 text-white focus-visible:ring-danger-600 active:bg-danger-700",
+    outline:
+      "border border-primary-900 bg-transparent text-primary-900 focus-visible:ring-primary-900 active:bg-surface",
+    "outline-danger":
+      "border border-danger-600 bg-transparent text-danger-700 focus-visible:ring-danger-600 active:bg-danger-50",
+    "outline-success":
+      "border border-success-600 bg-transparent text-success-700 focus-visible:ring-success-600 active:bg-success-50",
+    ghost:
+      "bg-transparent text-primary-900 focus-visible:ring-primary-900 active:bg-surface",
   };
 
-  // Size classes
   const sizeClasses = {
-    xs: 'px-2 py-1 text-xs',
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base',
-    xl: 'px-8 py-4 text-lg',
+    xs: "px-3 py-1.5 text-xs",
+    sm: "px-4 py-2 text-sm",
+    md: "px-6 py-2.5 text-sm",
+    lg: "px-6 py-3 text-base",
+    xl: "px-8 py-4 text-base",
   };
 
-  // Combine classes
   const buttonClasses = [
     baseClasses,
     variantClasses[variant],
     sizeClasses[size],
-    fullWidth ? 'w-full' : '',
+    fullWidth ? "w-full" : "",
     className,
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <button
+      type={props.type || "button"}
       className={buttonClasses}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       {...props}
     >
       {loading && (
         <svg
-          className="animate-spin -ml-1 mr-2 h-4 w-4"
+          className="h-4 w-4 animate-spin"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -74,15 +84,15 @@ const Button = ({
           ></path>
         </svg>
       )}
-      
-      {icon && iconPosition === 'left' && !loading && (
-        <span className="mr-2">{icon}</span>
+
+      {icon && iconPosition === "left" && !loading && (
+        <span className="shrink-0">{icon}</span>
       )}
-      
+
       {children}
-      
-      {icon && iconPosition === 'right' && !loading && (
-        <span className="ml-2">{icon}</span>
+
+      {icon && iconPosition === "right" && !loading && (
+        <span className="shrink-0">{icon}</span>
       )}
     </button>
   );

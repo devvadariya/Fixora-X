@@ -247,37 +247,37 @@ const UnifiedPaymentModal = ({
           <div className="px-6 py-4">
             <div className="space-y-4">
               {/* Service Request Info */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Service Details</h3>
+              <div className="bg-surface rounded-lg p-4">
+                <h3 className="font-semibold text-ink mb-3">Service Details</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Service Type:</span>
+                    <span className="text-secondary-600">Service Type:</span>
                     <span className="font-medium capitalize">{serviceRequest.issueType.replace('_', ' ')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Request ID:</span>
+                    <span className="text-secondary-600">Request ID:</span>
                     <span className="font-mono text-xs">{serviceRequest._id}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Status:</span>
+                    <span className="text-secondary-600">Status:</span>
                     <span className="font-medium capitalize">{serviceRequest.status}</span>
                   </div>
                 </div>
               </div>
 
               {/* Payment Amount */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold text-blue-900">Payment Amount</h3>
-                    <p className="text-sm text-blue-700">Final amount for service completion</p>
+                    <h3 className="font-semibold text-primary-900">Payment Amount</h3>
+                    <p className="text-sm text-primary-900">Final amount for service completion</p>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-900">
+                    <div className="text-2xl font-bold text-primary-900">
                       {formatCurrency(paymentData?.amount || amount || serviceRequest.quotation || 0)}
                     </div>
                     {paymentData?.processingFee && (
-                      <div className="text-xs text-blue-600">
+                      <div className="text-xs text-primary-900">
                         + {formatCurrency(paymentData.processingFee)} processing fee
                       </div>
                     )}
@@ -286,12 +286,12 @@ const UnifiedPaymentModal = ({
               </div>
 
               {/* Security Notice */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-success-50 border border-success-200 rounded-lg p-4">
                 <div className="flex items-start">
-                  <ShieldCheckIcon className="w-5 h-5 text-green-600 mr-2 mt-0.5" />
+                  <ShieldCheckIcon className="w-5 h-5 text-success-700 mr-2 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-green-900">Secure Payment</h4>
-                    <p className="text-sm text-green-700 mt-1">
+                    <h4 className="font-medium text-success-900">Secure Payment</h4>
+                    <p className="text-sm text-success-700 mt-1">
                       Your payment is secured by Razorpay with bank-level encryption. 
                       We never store your card details.
                     </p>
@@ -327,37 +327,37 @@ const UnifiedPaymentModal = ({
         return (
           <div className="px-6 py-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Processing Payment</h3>
-            <p className="text-gray-600">Please complete the payment in the popup window...</p>
-            <p className="text-sm text-gray-500 mt-2">Do not close this window</p>
+            <h3 className="text-lg font-medium text-ink mb-2">Processing Payment</h3>
+            <p className="text-secondary-600">Please complete the payment in the popup window...</p>
+            <p className="text-sm text-secondary-500 mt-2">Do not close this window</p>
           </div>
         );
 
       case 'success':
         return (
           <div className="px-6 py-8 text-center">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircleIcon className="w-8 h-8 text-green-600" />
+            <div className="mx-auto w-16 h-16 bg-success-50 rounded-full flex items-center justify-center mb-4">
+              <CheckCircleIcon className="w-8 h-8 text-success-700" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Payment Successful!</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-lg font-medium text-ink mb-2">Payment Successful!</h3>
+            <p className="text-secondary-600 mb-4">
               Your payment of {formatCurrency(paymentData?.amount || amount)} has been processed successfully.
             </p>
             
             {paymentData && (
-              <div className="bg-gray-50 rounded-lg p-4 mb-4 text-left">
-                <h4 className="font-medium text-gray-900 mb-2">Payment Details</h4>
+              <div className="bg-surface rounded-lg p-4 mb-4 text-left">
+                <h4 className="font-medium text-ink mb-2">Payment Details</h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Transaction ID:</span>
+                    <span className="text-secondary-600">Transaction ID:</span>
                     <span className="font-mono">{paymentData.transactionId || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Order ID:</span>
+                    <span className="text-secondary-600">Order ID:</span>
                     <span className="font-mono">{paymentData.orderId}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Date:</span>
+                    <span className="text-secondary-600">Date:</span>
                     <span>{formatDate(new Date())}</span>
                   </div>
                 </div>
@@ -377,11 +377,11 @@ const UnifiedPaymentModal = ({
       case 'failed':
         return (
           <div className="px-6 py-8 text-center">
-            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-              <ExclamationTriangleIcon className="w-8 h-8 text-red-600" />
+            <div className="mx-auto w-16 h-16 bg-danger-50 rounded-full flex items-center justify-center mb-4">
+              <ExclamationTriangleIcon className="w-8 h-8 text-danger-700" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Payment Failed</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-lg font-medium text-ink mb-2">Payment Failed</h3>
+            <p className="text-secondary-600 mb-4">
               {error || 'Something went wrong with your payment. Please try again.'}
             </p>
             
@@ -420,7 +420,7 @@ const UnifiedPaymentModal = ({
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         {/* Background overlay */}
         <div 
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+          className="fixed inset-0 bg-surface0 bg-opacity-75 transition-opacity"
           onClick={paymentStep === 'details' ? handleClose : undefined}
         ></div>
 
@@ -428,14 +428,14 @@ const UnifiedPaymentModal = ({
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           {/* Header */}
           {paymentStep === 'details' && (
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-6 py-4 border-b border-hairline">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-gray-900">
+                <h2 className="text-lg font-medium text-ink">
                   Complete Payment
                 </h2>
                 <button
                   onClick={handleClose}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-secondary-400 hover:text-secondary-600"
                 >
                   <XMarkIcon className="h-6 w-6" />
                 </button>

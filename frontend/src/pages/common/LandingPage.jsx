@@ -1,304 +1,524 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
 import {
-  WrenchScrewdriverIcon,
-  MapPinIcon,
+  ArrowRightIcon,
+  CheckBadgeIcon,
   ClockIcon,
+  MapPinIcon,
   ShieldCheckIcon,
-  UserGroupIcon,
-  StarIcon
-} from '@heroicons/react/24/outline';
-import Button from '../../components/common/Button';
+  SparklesIcon,
+  StarIcon,
+  TruckIcon,
+  WrenchScrewdriverIcon,
+} from "@heroicons/react/24/outline";
+import { Link } from "react-router-dom";
+import Button from "../../components/common/Button";
+import Card from "../../components/common/Card";
+import Section from "../../components/common/Section";
+
+const features = [
+  {
+    icon: <WrenchScrewdriverIcon className="h-6 w-6" />,
+    title: "Verified mechanics",
+    description:
+      "Every mechanic profile is screened, rated, and presented with the right service specialties.",
+    accent: "bg-brand-coral",
+  },
+  {
+    icon: <MapPinIcon className="h-6 w-6" />,
+    title: "Live location awareness",
+    description:
+      "Track service progress in real time and know exactly when support will reach you.",
+    accent: "bg-brand-blue",
+  },
+  {
+    icon: <ClockIcon className="h-6 w-6" />,
+    title: "Always-on dispatch",
+    description:
+      "Roadside assistance stays available around the clock so emergencies do not wait for business hours.",
+    accent: "bg-brand-purple",
+  },
+  {
+    icon: <ShieldCheckIcon className="h-6 w-6" />,
+    title: "Trusted payments",
+    description:
+      "Secure checkout, service transparency, and receipts keep every transaction clear.",
+    accent: "bg-primary-900",
+  },
+];
+
+const workflow = [
+  {
+    step: "01",
+    title: "Describe the problem",
+    description:
+      "Capture the vehicle issue, the location, and how urgent the situation is.",
+  },
+  {
+    step: "02",
+    title: "Match the right mechanic",
+    description:
+      "The platform surfaces nearby, relevant, and available mechanics for the request.",
+  },
+  {
+    step: "03",
+    title: "Track arrival and complete service",
+    description:
+      "Follow the mechanic, review the job, and pay securely when the work is done.",
+  },
+];
+
+const testimonials = [
+  {
+    name: "John Doe",
+    role: "Customer",
+    quote:
+      "Fixora-X saved my day when I had a flat tire on the highway. The flow felt calm even in an emergency.",
+  },
+  {
+    name: "Sarah Wilson",
+    role: "Customer",
+    quote:
+      "The tracking and mechanic profiles made it easy to trust the service before anyone arrived.",
+  },
+  {
+    name: "Rajesh Kumar",
+    role: "Mechanic",
+    quote:
+      "It gives me a clear workflow and a cleaner way to reach customers without losing context.",
+  },
+];
+
+const stats = [
+  { value: "24/7", label: "dispatch coverage" },
+  { value: "500+", label: "verified mechanics" },
+  { value: "5k+", label: "resolved requests" },
+  { value: "4.9/5", label: "average satisfaction" },
+];
 
 const LandingPage = () => {
-  const features = [
-    {
-      icon: <WrenchScrewdriverIcon className="h-8 w-8" />,
-      title: 'Expert Mechanics',
-      description: 'Connect with verified, skilled mechanics in your area for quick and reliable service.'
-    },
-    {
-      icon: <MapPinIcon className="h-8 w-8" />,
-      title: 'Real-time Tracking',
-      description: 'Track your mechanic\'s location in real-time and get live updates on service progress.'
-    },
-    {
-      icon: <ClockIcon className="h-8 w-8" />,
-      title: '24/7 Availability',
-      description: 'Get roadside assistance anytime, anywhere with our round-the-clock service.'
-    },
-    {
-      icon: <ShieldCheckIcon className="h-8 w-8" />,
-      title: 'Secure Payments',
-      description: 'Safe and secure payment processing with multiple payment options.'
-    },
-    {
-      icon: <UserGroupIcon className="h-8 w-8" />,
-      title: 'Trusted Community',
-      description: 'Join thousands of satisfied customers and verified mechanics.'
-    },
-    {
-      icon: <StarIcon className="h-8 w-8" />,
-      title: 'Quality Guaranteed',
-      description: 'Rate and review services to maintain high quality standards.'
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: 'John Doe',
-      role: 'Customer',
-      content: 'Fixora-X saved my day when I had a flat tire on the highway. Quick response and professional service!',
-      rating: 5
-    },
-    {
-      name: 'Sarah Wilson',
-      role: 'Customer',
-      content: 'Amazing app! The real-time tracking feature gave me peace of mind while waiting for help.',
-      rating: 5
-    },
-    {
-      name: 'Rajesh Kumar',
-      role: 'Mechanic',
-      content: 'Great platform for mechanics. Easy to use and helps me connect with customers efficiently.',
-      rating: 5
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <div className="h-10 w-10 bg-primary-600 rounded-full flex items-center justify-center">
-                <span className="text-xl font-bold text-white">F</span>
-              </div>
-              <span className="ml-3 text-2xl font-bold text-secondary-900">Fixora-X</span>
+    <div className="min-h-screen bg-white text-primary-900">
+      <div className="border-b border-hairline bg-primary-900 px-4 py-3 text-sm font-medium text-white sm:px-6 lg:px-8">
+        <div className="page-shell flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            Emergency roadside support, dispatch tracking, and transparent
+            booking in one place.
+          </p>
+          <Link
+            to="/register?role=customer"
+            className="inline-flex items-center gap-2 text-white/90"
+          >
+            Start a request <ArrowRightIcon className="h-4 w-4" />
+          </Link>
+        </div>
+      </div>
+
+      <header className="sticky top-0 z-20 border-b border-hairline bg-white/95 backdrop-blur">
+        <div className="page-shell flex items-center justify-between gap-4 py-4">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-900 text-sm font-semibold text-white">
+              F
             </div>
-            <nav className="hidden md:flex space-x-8">
-              <a href="#features" className="text-secondary-600 hover:text-primary-600">Features</a>
-              <a href="#how-it-works" className="text-secondary-600 hover:text-primary-600">How it Works</a>
-              <a href="#testimonials" className="text-secondary-600 hover:text-primary-600">Testimonials</a>
-            </nav>
-            <div className="flex space-x-4">
-              <Link to="/login">
-                <Button variant="ghost">Sign In</Button>
-              </Link>
-              <Link to="/register">
-                <Button variant="primary">Get Started</Button>
-              </Link>
+            <div>
+              <p className="text-sm font-semibold text-primary-900">Fixora-X</p>
+              <p className="text-xs text-secondary-500">Roadside services</p>
             </div>
+          </Link>
+
+          <nav className="hidden items-center gap-8 text-sm font-medium text-secondary-600 md:flex">
+            <a
+              href="#features"
+              className="transition-colors hover:text-primary-900"
+            >
+              Features
+            </a>
+            <a
+              href="#workflow"
+              className="transition-colors hover:text-primary-900"
+            >
+              How it works
+            </a>
+            <a
+              href="#stories"
+              className="transition-colors hover:text-primary-900"
+            >
+              Stories
+            </a>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="hidden sm:inline-flex">
+              <Button variant="tertiary" size="sm">
+                Sign In
+              </Button>
+            </Link>
+            <Link to="/register" className="inline-flex">
+              <Button variant="primary" size="sm">
+                Get Started
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-black opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-          }}></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
-          <div className="text-center">
-            <div className="animate-fade-in-up">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-                Your Trusted <span className="text-primary-200 animate-pulse">Roadside</span> Companion
-              </h1>
-              <p className="text-xl md:text-2xl mb-8 text-primary-100 max-w-4xl mx-auto leading-relaxed">
-                Get instant help when you need it most. Connect with verified mechanics for quick,
-                reliable roadside assistance wherever you are, 24/7.
+      <main>
+        <section className="page-shell py-14 sm:py-20 lg:py-24">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-secondary-500">
+                Emergency support, redesigned
               </p>
-            </div>
+              <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight text-primary-900 sm:text-5xl lg:text-6xl xl:text-7xl lg:leading-[1.05]">
+                Find a trusted mechanic before the problem gets worse.
+              </h1>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-secondary-600 sm:text-xl">
+                Fixora-X connects customers and mechanics with clean booking,
+                live updates, transparent requests, and reliable payments. It is
+                designed for urgency without losing clarity.
+              </p>
 
-            <div className="animate-fade-in-up animation-delay-200">
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link to="/register?role=customer">
-                  <Button variant="secondary" size="xl" className="w-full sm:w-auto transform hover:scale-105 transition-transform duration-200 shadow-lg">
-                    🚨 Need Help Now?
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    icon={<ArrowRightIcon className="h-4 w-4" />}
+                    className="w-full sm:w-auto"
+                  >
+                    Request roadside help
                   </Button>
                 </Link>
                 <Link to="/register?role=mechanic">
-                  <Button variant="outline" size="xl" className="w-full sm:w-auto text-white border-white hover:bg-white hover:text-primary-600 transform hover:scale-105 transition-transform duration-200">
-                    🔧 Join as Mechanic
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="w-full sm:w-auto"
+                  >
+                    Join as mechanic
                   </Button>
                 </Link>
               </div>
 
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary-200">24/7</div>
-                  <div className="text-sm text-primary-100">Available</div>
+              <div className="mt-8 flex flex-wrap gap-4 text-sm text-secondary-600">
+                <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-4 py-2">
+                  <CheckBadgeIcon className="h-4 w-4 text-success-600" />
+                  Verified profiles
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary-200">5k+</div>
-                  <div className="text-sm text-primary-100">Happy Customers</div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-4 py-2">
+                  <TruckIcon className="h-4 w-4 text-brand-blue" />
+                  Fast dispatch
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary-200">500+</div>
-                  <div className="text-sm text-primary-100">Verified Mechanics</div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-4 py-2">
+                  <SparklesIcon className="h-4 w-4 text-brand-coral" />
+                  Premium UX
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Floating Icons */}
-        <div className="absolute top-20 left-10 animate-bounce">
-          <WrenchScrewdriverIcon className="h-8 w-8 text-primary-300 opacity-50" />
-        </div>
-        <div className="absolute top-40 right-20 animate-bounce animation-delay-1000">
-          <MapPinIcon className="h-6 w-6 text-primary-300 opacity-50" />
-        </div>
-        <div className="absolute bottom-20 left-20 animate-bounce animation-delay-500">
-          <ClockIcon className="h-7 w-7 text-primary-300 opacity-50" />
-        </div>
-      </section>
+            <div className="grid gap-4">
+              <Card
+                variant="product"
+                className="overflow-hidden bg-gradient-to-br from-brand-coral via-brand-magenta to-brand-purple"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.25em] text-white/80">
+                      Live dispatch
+                    </p>
+                    <h2 className="mt-4 text-4xl font-semibold tracking-tight text-white">
+                      Roadside assistance in motion.
+                    </h2>
+                  </div>
+                  <div className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                    Active
+                  </div>
+                </div>
 
-      {/* Features Section */}
-      <section id="features" className="py-24 bg-secondary-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-4">
-              Why Choose Fixora-X?
-            </h2>
-            <p className="text-xl text-secondary-600 max-w-2xl mx-auto">
-              We provide comprehensive roadside assistance with cutting-edge technology
-              and a network of trusted professionals.
-            </p>
-          </div>
+                <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-white/15 p-4 text-white backdrop-blur-sm">
+                    <p className="text-sm text-white/80">Nearest mechanic</p>
+                    <p className="mt-2 text-xl font-semibold">2.4 km away</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/15 p-4 text-white backdrop-blur-sm">
+                    <p className="text-sm text-white/80">Arrival estimate</p>
+                    <p className="mt-2 text-xl font-semibold">11 min</p>
+                  </div>
+                </div>
+              </Card>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className="bg-white rounded-lg p-8 shadow-card hover:shadow-card-hover transition-shadow">
-                <div className="text-primary-600 mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold text-secondary-900 mb-3">{feature.title}</h3>
-                <p className="text-secondary-600">{feature.description}</p>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {stats.slice(0, 2).map((stat) => (
+                  <Card key={stat.label} className="p-5">
+                    <p className="text-3xl font-semibold tracking-tight text-primary-900">
+                      {stat.value}
+                    </p>
+                    <p className="mt-1 text-sm text-secondary-600">
+                      {stat.label}
+                    </p>
+                  </Card>
+                ))}
               </div>
+            </div>
+          </div>
+        </section>
+
+        <Section
+          id="features"
+          eyebrow="Capabilities"
+          title="Built around the moments that matter most"
+          description="The product experience centers on trust, speed, and clear service visibility from the first tap to the final payment."
+          className="bg-surface py-16 sm:py-20"
+        >
+          <div className="page-shell">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {features.map((feature) => (
+                <Card
+                  key={feature.title}
+                  variant="feature"
+                  className="flex h-full flex-col gap-5 bg-white"
+                >
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-2xl text-white ${feature.accent}`}
+                  >
+                    {feature.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold tracking-tight text-primary-900">
+                      {feature.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-secondary-600">
+                      {feature.description}
+                    </p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </Section>
+
+        <section id="workflow" className="page-shell py-16 sm:py-20 lg:py-24">
+          <Section
+            eyebrow="Workflow"
+            title="Three simple steps from breakdown to resolution"
+            description="The structure stays calm and readable even when the user is in a hurry."
+          >
+            <div className="grid gap-4 md:grid-cols-3">
+              {workflow.map((item, index) => (
+                <Card
+                  key={item.title}
+                  className="flex h-full flex-col justify-between p-6"
+                >
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.25em] text-secondary-500">
+                      {item.step}
+                    </p>
+                    <h3 className="mt-4 text-2xl font-semibold tracking-tight text-primary-900">
+                      {item.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-secondary-600">
+                      {item.description}
+                    </p>
+                  </div>
+                  <div className="mt-8 h-px w-full bg-hairline" />
+                  <p className="mt-4 text-sm font-medium text-secondary-500">
+                    Step {index + 1} of {workflow.length}
+                  </p>
+                </Card>
+              ))}
+            </div>
+          </Section>
+        </section>
+
+        <section className="page-shell py-16 sm:py-20">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {stats.map((stat) => (
+              <Card key={stat.label} className="p-6">
+                <p className="text-4xl font-semibold tracking-tight text-primary-900">
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-sm text-secondary-600">{stat.label}</p>
+              </Card>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* How it Works Section */}
-      <section id="how-it-works" className="py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-4">
-              How It Works
-            </h2>
-            <p className="text-xl text-secondary-600">
-              Get help in just a few simple steps
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto mb-4">
-                1
+        <section id="stories" className="bg-surface py-16 sm:py-20 lg:py-24">
+          <div className="page-shell">
+            <Section
+              eyebrow="Social proof"
+              title="Trusted by customers and mechanics"
+              description="Short, high-signal stories keep the landing page grounded in the actual workflow."
+            >
+              <div className="grid gap-4 md:grid-cols-3">
+                {testimonials.map((testimonial) => (
+                  <Card
+                    key={testimonial.name}
+                    className="flex h-full flex-col p-6"
+                  >
+                    <div className="flex items-center gap-1 text-warning-600">
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <StarIcon
+                          key={index}
+                          className="h-4 w-4 fill-current"
+                        />
+                      ))}
+                    </div>
+                    <p className="mt-5 text-sm leading-7 text-secondary-600">
+                      “{testimonial.quote}”
+                    </p>
+                    <div className="mt-6 pt-4">
+                      <p className="text-sm font-semibold text-primary-900">
+                        {testimonial.name}
+                      </p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-secondary-500">
+                        {testimonial.role}
+                      </p>
+                    </div>
+                  </Card>
+                ))}
               </div>
-              <h3 className="text-xl font-semibold text-secondary-900 mb-3">Request Help</h3>
-              <p className="text-secondary-600">
-                Describe your issue and share your location. Our system will find nearby mechanics.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto mb-4">
-                2
-              </div>
-              <h3 className="text-xl font-semibold text-secondary-900 mb-3">Get Matched</h3>
-              <p className="text-secondary-600">
-                A verified mechanic accepts your request and provides an estimated arrival time.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto mb-4">
-                3
-              </div>
-              <h3 className="text-xl font-semibold text-secondary-900 mb-3">Track & Pay</h3>
-              <p className="text-secondary-600">
-                Track your mechanic in real-time and pay securely through the app.
-              </p>
-            </div>
+            </Section>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-24 bg-secondary-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-4">
-              What Our Users Say
-            </h2>
-            <p className="text-xl text-secondary-600">
-              Trusted by thousands of customers and mechanics
-            </p>
-          </div>
+        <section className="page-shell py-16 sm:py-20 lg:py-24">
+          <Card className="overflow-hidden bg-primary-900 p-0 text-white">
+            <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="p-8 sm:p-10 lg:p-12">
+                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-white/70">
+                  Ready for rollout
+                </p>
+                <h2 className="mt-4 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+                  Bring roadside service into one calm, reliable flow.
+                </h2>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-white/80 sm:text-lg">
+                  Customers get a faster path to help. Mechanics get a clearer
+                  workflow. The platform gets a brand that feels intentional
+                  rather than improvised.
+                </p>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white rounded-lg p-6 shadow-card">
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <StarIcon key={i} className="h-5 w-5 text-warning-400 fill-current" />
-                  ))}
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link to="/register?role=customer">
+                    <Button variant="secondary" size="lg">
+                      Sign Up as Customer
+                    </Button>
+                  </Link>
+                  <Link to="/register?role=mechanic">
+                    <Button variant="tertiary" size="lg">
+                      Join as Mechanic
+                    </Button>
+                  </Link>
                 </div>
-                <p className="text-secondary-600 mb-4">"{testimonial.content}"</p>
+              </div>
+
+              <div className="border-t border-white/10 p-8 sm:p-10 lg:border-l lg:border-t-0 lg:p-12">
+                <div className="space-y-4">
+                  <div className="rounded-2xl bg-white/10 p-5">
+                    <p className="text-sm text-white/70">Support status</p>
+                    <p className="mt-2 text-2xl font-semibold">
+                      Dispatch ready
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-white/10 p-5">
+                    <p className="text-sm text-white/70">Coverage</p>
+                    <p className="mt-2 text-2xl font-semibold">
+                      Urban + highway
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-white/10 p-5">
+                    <p className="text-sm text-white/70">Payments</p>
+                    <p className="mt-2 text-2xl font-semibold">
+                      Secure checkout
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </section>
+      </main>
+
+      <footer className="bg-primary-900 text-white">
+        <div className="page-shell py-12 sm:py-14 lg:py-16">
+          <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-sm font-semibold text-primary-900">
+                  F
+                </div>
                 <div>
-                  <p className="font-semibold text-secondary-900">{testimonial.name}</p>
-                  <p className="text-sm text-secondary-500">{testimonial.role}</p>
+                  <p className="text-sm font-semibold">Fixora-X</p>
+                  <p className="text-xs text-white/70">
+                    intelligence with everyone
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              <p className="mt-4 max-w-md text-sm leading-7 text-white/70">
+                A cleaner route to roadside assistance, trusted mechanics, and
+                transparent service delivery.
+              </p>
+            </div>
 
-      {/* CTA Section */}
-      <section className="py-24 bg-primary-600">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl text-primary-100 mb-8">
-            Join thousands of satisfied users and experience reliable roadside assistance today.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register?role=customer">
-              <Button variant="secondary" size="xl" className="w-full sm:w-auto">
-                Sign Up as Customer
-              </Button>
-            </Link>
-            <Link to="/register?role=mechanic">
-              <Button variant="outline" size="xl" className="w-full sm:w-auto text-white border-white hover:bg-white hover:text-primary-600">
-                Join as Mechanic
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-secondary-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <div className="h-8 w-8 bg-primary-600 rounded-full flex items-center justify-center">
-                <span className="text-lg font-bold text-white">F</span>
+            <div>
+              <p className="text-sm font-semibold text-white">Product</p>
+              <div className="mt-4 space-y-2 text-sm text-white/70">
+                <a
+                  href="#features"
+                  className="block transition-colors hover:text-white"
+                >
+                  Features
+                </a>
+                <a
+                  href="#workflow"
+                  className="block transition-colors hover:text-white"
+                >
+                  How it works
+                </a>
+                <a
+                  href="#stories"
+                  className="block transition-colors hover:text-white"
+                >
+                  Stories
+                </a>
               </div>
-              <span className="ml-3 text-xl font-bold">Fixora-X</span>
             </div>
-            <div className="text-secondary-400">
-              <p>&copy; 2026 Fixora-X. All rights reserved.</p>
+
+            <div>
+              <p className="text-sm font-semibold text-white">For customers</p>
+              <div className="mt-4 space-y-2 text-sm text-white/70">
+                <Link
+                  to="/login"
+                  className="block transition-colors hover:text-white"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/register?role=customer"
+                  className="block transition-colors hover:text-white"
+                >
+                  Request help
+                </Link>
+                <Link
+                  to="/register?role=mechanic"
+                  className="block transition-colors hover:text-white"
+                >
+                  Become a mechanic
+                </Link>
+              </div>
             </div>
+
+            <div>
+              <p className="text-sm font-semibold text-white">Contact</p>
+              <div className="mt-4 space-y-2 text-sm text-white/70">
+                <p>support@fixorax.com</p>
+                <p>24/7 roadside dispatch</p>
+                <p>Built for urgent service workflows</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 border-t border-white/10 pt-6 text-sm text-white/60 sm:flex sm:items-center sm:justify-between">
+            <p>&copy; 2026 Fixora-X. All rights reserved.</p>
+            <p>Designed for clarity, trust, and speed.</p>
           </div>
         </div>
       </footer>

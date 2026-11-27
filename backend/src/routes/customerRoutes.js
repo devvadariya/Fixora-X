@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const customerController = require('../controllers/customerController');
 const requestController = require('../controllers/requestController');
-const { authenticateToken } = require('../middlewares/authMiddleware');
+const userController = require('../controllers/userController');
+const { authenticateToken, authorize } = require('../middlewares/authMiddleware');
 const { validate, schemas } = require('../middlewares/validationMiddleware');
 const uploadMiddleware = require('../middlewares/uploadMiddleware');
 
@@ -11,6 +12,9 @@ router.get('/mechanics/nearby', customerController.getNearbyMechanics);
 
 // Apply authentication to other customer routes
 router.use(authenticateToken);
+router.use(authorize(['customer']));
+router.get('/profile', userController.getProfile);
+router.patch('/profile', validate(schemas.updateProfile), userController.updateProfile);
 router.get('/mechanics/:mechanicId', customerController.getMechanicDetails);
 
 // Service request routes

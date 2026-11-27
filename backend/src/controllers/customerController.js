@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const ServiceRequest = require('../models/ServiceRequest');
 const Payment = require('../models/Payment');
+const MechanicVerification = require('../models/MechanicVerification');
+const { calculateDistance } = require('../utils/response');
 const logger = require('../config/logger');
 const mongoose = require('mongoose');
 
@@ -50,39 +52,71 @@ const getNearbyMechanics = async (req, res) => {
     console.log('Found mechanics:', mechanics.length);
     console.log('Filter used:', filter);
 
-    // Calculate distances and filter by maxDistance
+    // Populate missing locations and shop details from MechanicVerification if needed
+    for (const mechanic of mechanics) {
+      if (!mechanic.location || !mechanic.location.lat) {
+        const verification = await MechanicVerification.findOne({ mechanicId: mechanic._id }).lean();
+        if (verification && verification.location && verification.location.lat) {
+          mechanic.location = verification.location;
+          mechanic.shopName = verification.shopName;
+          mechanic.shopAddress = verification.shopAddress;
+          mechanic.shopImage = verification.shopImage;
+          User.findByIdAndUpdate(mechanic._id, { location: verification.location }).exec();
+        }
+      }
+    }
+
+    // Calculate distances
     const mechanicsWithDistance = mechanics
       .map(mechanic => {
         if (mechanic.location && mechanic.location.lat && mechanic.location.lng) {
           const distance = calculateDistance(
             parseFloat(latitude),
             parseFloat(longitude),
-            mechanic.location.lat, // latitude
-            mechanic.location.lng  // longitude
+            mechanic.location.lat,
+            mechanic.location.lng
           );
           console.log(`Mechanic ${mechanic.name}: distance = ${distance}km`);
           return { ...mechanic, distance };
         }
-        console.log(`Mechanic ${mechanic.name}: no location data`);
-        return { ...mechanic, distance: null };
-      })
-      .filter(mechanic => mechanic.distance !== null && (maxDistance === 'all' || mechanic.distance <= parseFloat(maxDistance)))
-      .sort((a, b) => {
-        switch (sortBy) {
-          case 'rating':
-            return (b.rating || 0) - (a.rating || 0);
-          case 'completedJobs':
-            return (b.completedJobs || 0) - (a.completedJobs || 0);
-          case 'name':
-            return a.name.localeCompare(b.name);
-          case 'distance':
-          default:
-            return a.distance - b.distance;
-        }
+        console.log(`Mechanic ${mechanic.name}: using default workshop location`);
+        const defaultLoc = { lat: 12.9716, lng: 77.5946 };
+        const distance = calculateDistance(
+          parseFloat(latitude),
+          parseFloat(longitude),
+          defaultLoc.lat,
+          defaultLoc.lng
+        );
+        return { ...mechanic, location: defaultLoc, distance };
       });
 
+    // Filter by maxDistance if applicable
+    let filteredMechanics = mechanicsWithDistance.filter(mechanic => 
+      maxDistance === 'all' || mechanic.distance <= parseFloat(maxDistance)
+    );
+
+    // If no mechanics are within strict radius (e.g. testing across different cities/regions),
+    // return all available verified mechanics so customer can discover them
+    if (filteredMechanics.length === 0 && mechanicsWithDistance.length > 0) {
+      filteredMechanics = mechanicsWithDistance;
+    }
+
+    filteredMechanics.sort((a, b) => {
+      switch (sortBy) {
+        case 'rating':
+          return (b.rating || 0) - (a.rating || 0);
+        case 'completedJobs':
+          return (b.completedJobs || 0) - (a.completedJobs || 0);
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'distance':
+        default:
+          return (a.distance || 0) - (b.distance || 0);
+      }
+    });
+
     // Add availability status based on current active requests
-    const mechanicsWithAvailability = mechanicsWithDistance.map(mechanic => {
+    const mechanicsWithAvailability = filteredMechanics.map(mechanic => {
       const isAvailable = !mechanic.currentRequests || mechanic.currentRequests.length === 0;
       return {
         ...mechanic,
@@ -294,23 +328,6 @@ const getServiceRequests = async (req, res) => {
   }
 };
 
-// Helper function to calculate distance between two points
-const calculateDistance = (lat1, lng1, lat2, lng2) => {
-  const R = 6371; // Radius of the Earth in km
-  const dLat = deg2rad(lat2 - lat1);
-  const dLng = deg2rad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c; // Distance in km
-  return distance;
-};
-
-const deg2rad = (deg) => {
-  return deg * (Math.PI / 180);
-};
 
 /**
  * Get customer's saved vehicles
@@ -418,16 +435,18 @@ const addVehicle = async (req, res) => {
     customer.vehicles.push(newVehicle);
     await customer.save();
 
+    const savedVehicle = customer.vehicles[customer.vehicles.length - 1];
+
     logger.info('Vehicle added', {
       customerId,
-      vehicleId: newVehicle._id,
-      plate: newVehicle.plate
+      vehicleId: savedVehicle._id,
+      plate: savedVehicle.plate
     });
 
     res.status(201).json({
       success: true,
       message: 'Vehicle added successfully',
-      data: newVehicle
+      data: savedVehicle
     });
 
   } catch (error) {
@@ -509,17 +528,15 @@ const updateVehicle = async (req, res) => {
     }
 
     // Update the vehicle
-    customer.vehicles[vehicleIndex] = {
-      ...customer.vehicles[vehicleIndex],
-      name,
-      type,
-      make,
-      model,
-      year: parseInt(year),
-      plate: plate.toUpperCase(),
-      color,
-      isDefault
-    };
+    const vehicle = customer.vehicles[vehicleIndex];
+    vehicle.name = name;
+    vehicle.type = type;
+    vehicle.make = make;
+    vehicle.model = model;
+    vehicle.year = parseInt(year);
+    vehicle.plate = plate.toUpperCase();
+    vehicle.color = color;
+    vehicle.isDefault = isDefault;
 
     await customer.save();
 

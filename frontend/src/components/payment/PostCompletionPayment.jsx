@@ -137,11 +137,11 @@ const PostCompletionPayment = ({ serviceRequest, onPaymentSuccess, onClose }) =>
   const getStatusIcon = () => {
     switch (paymentStatus) {
       case 'success':
-        return <CheckCircleIcon className="w-16 h-16 text-green-500" />;
+        return <CheckCircleIcon className="w-16 h-16 text-success-600" />;
       case 'failed':
-        return <ExclamationTriangleIcon className="w-16 h-16 text-red-500" />;
+        return <ExclamationTriangleIcon className="w-16 h-16 text-danger-600" />;
       default:
-        return <ClockIcon className="w-16 h-16 text-blue-500" />;
+        return <ClockIcon className="w-16 h-16 text-primary-900" />;
     }
   };
 
@@ -169,12 +169,12 @@ const PostCompletionPayment = ({ serviceRequest, onPaymentSuccess, onClose }) =>
 
   if (!serviceRequest) {
     return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div className="fixed inset-0 bg-primary-900 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div className="relative top-20 mx-auto p-5 border w-96 shadow-card-hover rounded-md bg-white">
           <div className="text-center">
-            <ExclamationTriangleIcon className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Invalid Request</h3>
-            <p className="text-gray-500">Service request not found or not completed.</p>
+            <ExclamationTriangleIcon className="w-16 h-16 text-danger-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-ink mb-2">Invalid Request</h3>
+            <p className="text-secondary-500">Service request not found or not completed.</p>
             <Button
               variant="primary"
               onClick={onClose}
@@ -189,8 +189,8 @@ const PostCompletionPayment = ({ serviceRequest, onPaymentSuccess, onClose }) =>
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+    <div className="fixed inset-0 bg-primary-900 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-card-hover rounded-md bg-white">
         <div className="text-center">
           {/* Status Icon */}
           <div className="mb-4">
@@ -198,43 +198,43 @@ const PostCompletionPayment = ({ serviceRequest, onPaymentSuccess, onClose }) =>
           </div>
 
           {/* Status Message */}
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <h3 className="text-xl font-semibold text-ink mb-2">
             {getStatusMessage()}
           </h3>
 
-          <p className="text-gray-600 mb-6">
+          <p className="text-secondary-600 mb-6">
             {getStatusDescription()}
           </p>
 
           {/* Service Request Details */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-            <h4 className="font-medium text-gray-900 mb-3">Service Details</h4>
+          <div className="bg-surface rounded-lg p-4 mb-6 text-left">
+            <h4 className="font-medium text-ink mb-3">Service Details</h4>
             
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Service Type:</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-secondary-600">Service Type:</span>
+                <span className="font-medium text-ink">
                   {serviceRequest.issueType.replace('_', ' ').toUpperCase()}
                 </span>
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Mechanic:</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-secondary-600">Mechanic:</span>
+                <span className="font-medium text-ink">
                   {serviceRequest.mechanicId?.name || 'N/A'}
                 </span>
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Completed:</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-secondary-600">Completed:</span>
+                <span className="font-medium text-ink">
                   {formatDate(serviceRequest.completedAt || serviceRequest.updatedAt)}
                 </span>
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Amount:</span>
-                <span className="font-medium text-green-600 text-lg">
+                <span className="text-secondary-600">Amount:</span>
+                <span className="font-medium text-success-700 text-lg">
                   {formatCurrency(serviceRequest.quotation || serviceRequest.finalAmount || 0)}
                 </span>
               </div>
@@ -268,10 +268,10 @@ const PostCompletionPayment = ({ serviceRequest, onPaymentSuccess, onClose }) =>
 
           {paymentStatus === 'success' && (
             <div className="space-y-3">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-success-50 border border-success-200 rounded-lg p-4">
                 <div className="flex items-center">
-                  <CheckCircleIcon className="w-5 h-5 text-green-500 mr-2" />
-                  <span className="text-green-800 font-medium">
+                  <CheckCircleIcon className="w-5 h-5 text-success-600 mr-2" />
+                  <span className="text-success-700 font-medium">
                     Payment completed successfully!
                   </span>
                 </div>
@@ -289,10 +289,10 @@ const PostCompletionPayment = ({ serviceRequest, onPaymentSuccess, onClose }) =>
 
           {paymentStatus === 'failed' && (
             <div className="space-y-3">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="bg-danger-50 border border-danger-200 rounded-lg p-4">
                 <div className="flex items-center">
-                  <ExclamationTriangleIcon className="w-5 h-5 text-red-500 mr-2" />
-                  <span className="text-red-800 font-medium">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-danger-600 mr-2" />
+                  <span className="text-danger-700 font-medium">
                     Payment failed. Please try again.
                   </span>
                 </div>
@@ -321,7 +321,7 @@ const PostCompletionPayment = ({ serviceRequest, onPaymentSuccess, onClose }) =>
 
           {/* Payment Info */}
           {paymentData && (
-            <div className="mt-4 text-xs text-gray-500">
+            <div className="mt-4 text-xs text-secondary-500">
               <p>Order ID: {paymentData.orderId}</p>
               <p>Payment ID: {paymentData.paymentId}</p>
             </div>

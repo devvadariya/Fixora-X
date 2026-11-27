@@ -49,9 +49,9 @@ const ConversationList = ({ conversations, loading, onConversationSelect, select
   if (conversations.length === 0) {
     return (
       <div className="text-center py-12">
-        <ChatBubbleLeftIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No conversations yet</h3>
-        <p className="text-gray-500">
+        <ChatBubbleLeftIcon className="w-16 h-16 text-secondary-400 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-ink mb-2">No conversations yet</h3>
+        <p className="text-secondary-500">
           Start a conversation by creating a service request or accepting one.
         </p>
       </div>
@@ -72,7 +72,7 @@ const ConversationList = ({ conversations, loading, onConversationSelect, select
             className={`p-4 border rounded-lg cursor-pointer transition-colors ${
               isSelected 
                 ? 'bg-primary-50 border-primary-200' 
-                : 'bg-white border-gray-200 hover:bg-gray-50'
+                : 'bg-white border-hairline hover:bg-surface'
             }`}
           >
             <div className="flex items-start justify-between mb-2">
@@ -81,16 +81,16 @@ const ConversationList = ({ conversations, loading, onConversationSelect, select
                   <UserIcon className="w-5 h-5 text-primary-600" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900">
+                  <h4 className="font-medium text-ink">
                     {otherParticipant?.name || 'Unknown User'}
                   </h4>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-secondary-500">
                     {getConversationTitle(conversation)}
                   </p>
                 </div>
               </div>
               {conversation.unreadCount > 0 && (
-                <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                <span className="bg-danger-600 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
                   {conversation.unreadCount}
                 </span>
               )}
@@ -98,10 +98,10 @@ const ConversationList = ({ conversations, loading, onConversationSelect, select
             
             {lastMessage && (
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600 truncate flex-1">
+                <p className="text-sm text-secondary-600 truncate flex-1">
                   {lastMessage.content}
                 </p>
-                <div className="flex items-center gap-1 text-xs text-gray-400 ml-2">
+                <div className="flex items-center gap-1 text-xs text-secondary-400 ml-2">
                   <ClockIcon className="w-3 h-3" />
                   <span>
                     {formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: true })}
@@ -111,7 +111,7 @@ const ConversationList = ({ conversations, loading, onConversationSelect, select
             )}
             
             {conversation.serviceRequest && (
-              <div className="mt-2 text-xs text-gray-500">
+              <div className="mt-2 text-xs text-secondary-500">
                 Status: {conversation.serviceRequest.status}
               </div>
             )}

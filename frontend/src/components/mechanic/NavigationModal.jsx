@@ -19,6 +19,17 @@ const NavigationModal = ({ isOpen, onClose, request, mechanicLocation }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape' && !loading) onClose();
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, loading, onClose]);
+
+  useEffect(() => {
     if (isOpen && request?.location) {
       if (mechanicLocation) {
         calculateRoute();
@@ -154,14 +165,14 @@ const NavigationModal = ({ isOpen, onClose, request, mechanicLocation }) => {
   if (!isOpen || !request) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-900/70 p-4 backdrop-blur-sm">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-hairline bg-white shadow-modal" role="dialog" aria-modal="true" aria-labelledby="navigation-dialog-title">
         <div className="p-6">
           {/* Header */}
-          <div className="flex justify-between items-start mb-6">
+          <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Navigation</h2>
-              <p className="text-gray-600 mt-1">Get directions to customer location</p>
+              <h2 id="navigation-dialog-title" className="text-xl font-semibold tracking-[-0.04em] text-ink">Navigation</h2>
+              <p className="mt-1 text-sm text-secondary-600">Get directions to customer location</p>
             </div>
             <Button
               variant="secondary"
@@ -173,31 +184,32 @@ const NavigationModal = ({ isOpen, onClose, request, mechanicLocation }) => {
           </div>
 
           {/* Customer Info */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold text-gray-900 mb-2">Customer Details</h3>
+          <div className="mb-6 rounded-xl border border-hairline bg-surface p-4">
+            <h3 className="mb-2 font-semibold text-ink">Customer Details</h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <TruckIcon className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600">
+                <TruckIcon className="h-4 w-4 text-secondary-400" />
+                <span className="text-secondary-600">
                   {request.customerId?.name || 'Customer'}
                 </span>
               </div>
               {request.customerId?.phone && (
                 <div className="flex items-center gap-2">
-                  <PhoneIcon className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">{request.customerId.phone}</span>
+                  <PhoneIcon className="h-4 w-4 text-secondary-400" />
+                  <span className="text-secondary-600">{request.customerId.phone}</span>
                 </div>
               )}
               <div className="flex items-start gap-2">
-                <MapPinIcon className="h-4 w-4 text-gray-400 mt-0.5" />
+                <MapPinIcon className="mt-0.5 h-4 w-4 text-secondary-400" />
                 <div className="flex-1">
-                  <span className="text-gray-600">
+                  <span className="text-secondary-600">
                     {request.location?.address || 'Address not specified'}
                   </span>
                   {request.location?.address && (
                     <button
                       onClick={copyAddressToClipboard}
-                      className="ml-2 text-primary-600 hover:text-primary-700"
+                      aria-label="Copy customer address"
+                      className="ml-2 rounded p-1 text-primary-900 hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                       title="Copy address"
                     >
                       <ClipboardDocumentIcon className="h-4 w-4" />
@@ -212,26 +224,26 @@ const NavigationModal = ({ isOpen, onClose, request, mechanicLocation }) => {
           {loading ? (
             <div className="text-center py-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="text-gray-600 mt-2">Calculating route...</p>
+              <p className="mt-2 text-sm text-secondary-600">Calculating route...</p>
             </div>
           ) : (
-            <div className="bg-blue-50 rounded-lg p-4 mb-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Route Information</h3>
+            <div className="mb-6 rounded-xl border border-primary-200 bg-primary-50 p-4">
+              <h3 className="mb-3 font-semibold text-ink">Route Information</h3>
               <div className="space-y-3">
                 {distance && (
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Distance:</span>
+                    <span className="text-secondary-600">Distance:</span>
                     <span className="font-medium">{formatDistance(distance)}</span>
                   </div>
                 )}
                 {estimatedTime && (
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Estimated Time:</span>
+                    <span className="text-secondary-600">Estimated Time:</span>
                     <span className="font-medium">{formatDuration(estimatedTime)}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Service Type:</span>
+                  <span className="text-secondary-600">Service Type:</span>
                   <span className="font-medium capitalize">
                     {request.issueType?.replace('_', ' ')}
                   </span>
@@ -242,24 +254,24 @@ const NavigationModal = ({ isOpen, onClose, request, mechanicLocation }) => {
 
           {/* Map Preview */}
           {request?.location && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Location Preview</h3>
-              <div className="bg-white rounded-lg p-3 border">
+            <div className="mb-6 rounded-xl border border-hairline bg-surface p-4">
+              <h3 className="mb-3 font-semibold text-ink">Location Preview</h3>
+              <div className="rounded-xl border border-hairline bg-white p-3">
                 {/* Exact Coordinates */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                  <label className="block text-sm font-medium text-blue-800 mb-2">
+                <div className="mb-3 rounded-xl border border-primary-200 bg-primary-50 p-3">
+                  <label className="mb-2 block text-sm font-medium text-primary-900">
                     📍 Exact Coordinates
                   </label>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-blue-700">Latitude:</span>
-                      <span className="text-sm font-mono text-blue-900 bg-white px-2 py-1 rounded border">
+                      <span className="text-sm font-medium text-primary-900">Latitude:</span>
+                      <span className="rounded border border-hairline bg-white px-2 py-1 font-mono text-sm text-primary-900">
                         {request.location.lat.toFixed(6)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-blue-700">Longitude:</span>
-                      <span className="text-sm font-mono text-blue-900 bg-white px-2 py-1 rounded border">
+                      <span className="text-sm font-medium text-primary-900">Longitude:</span>
+                      <span className="rounded border border-hairline bg-white px-2 py-1 font-mono text-sm text-primary-900">
                         {request.location.lng.toFixed(6)}
                       </span>
                     </div>
@@ -269,14 +281,14 @@ const NavigationModal = ({ isOpen, onClose, request, mechanicLocation }) => {
                         navigator.clipboard.writeText(coords);
                         toast.success('Coordinates copied to clipboard');
                       }}
-                      className="w-full bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+                      className="w-full rounded-full bg-primary-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900 focus-visible:ring-offset-2"
                     >
                       Copy Coordinates
                     </button>
                   </div>
                 </div>
                 
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-secondary-600">
                   {request.location.address || 'Address not specified'}
                 </div>
                 <div className="mt-3">
@@ -284,7 +296,7 @@ const NavigationModal = ({ isOpen, onClose, request, mechanicLocation }) => {
                     href={`https://www.google.com/maps?q=${request.location.lat},${request.location.lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                    className="text-sm font-medium text-primary-900 hover:text-primary-700"
                   >
                     View on Google Maps →
                   </a>
@@ -295,7 +307,7 @@ const NavigationModal = ({ isOpen, onClose, request, mechanicLocation }) => {
 
           {/* Navigation Options */}
           <div className="space-y-3 mb-6">
-            <h3 className="font-semibold text-gray-900">Open Navigation</h3>
+            <h3 className="font-semibold text-ink">Open Navigation</h3>
             
             <Button
               onClick={openGoogleMaps}
@@ -327,7 +339,7 @@ const NavigationModal = ({ isOpen, onClose, request, mechanicLocation }) => {
 
           {/* Quick Actions */}
           <div className="space-y-3 mb-6">
-            <h3 className="font-semibold text-gray-900">Quick Actions</h3>
+            <h3 className="font-semibold text-ink">Quick Actions</h3>
             
             {request.customerId?.phone && (
               <Button
@@ -351,22 +363,22 @@ const NavigationModal = ({ isOpen, onClose, request, mechanicLocation }) => {
           </div>
 
           {/* Service Details */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 mb-2">Service Details</h3>
+          <div className="rounded-xl border border-hairline bg-surface p-4">
+            <h3 className="mb-2 font-semibold text-ink">Service Details</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Vehicle:</span>
+                <span className="text-secondary-600">Vehicle:</span>
                 <span className="font-medium">
                   {request.vehicleInfo?.make} {request.vehicleInfo?.model}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Plate:</span>
+                <span className="text-secondary-600">Plate:</span>
                 <span className="font-medium">{request.vehicleInfo?.plate}</span>
               </div>
               {request.quotation && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Quotation:</span>
+                  <span className="text-secondary-600">Quotation:</span>
                   <span className="font-medium">₹{request.quotation}</span>
                 </div>
               )}

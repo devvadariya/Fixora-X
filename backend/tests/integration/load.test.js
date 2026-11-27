@@ -1,4 +1,5 @@
 const request = require('supertest');
+const mongoose = require('mongoose');
 const app = require('../../server');
 
 describe('Load Tests', () => {
@@ -6,6 +7,17 @@ describe('Load Tests', () => {
   let userId;
 
   beforeAll(async () => {
+    global.isLoadTest = true;
+    // Ensure DB connection and clean it
+    if (mongoose.connection.readyState !== 1) {
+      const TEST_DB_URI = process.env.TEST_MONGODB_URI || process.env.MONGODB_URI;
+      await mongoose.connect(TEST_DB_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+      });
+    }
+    await mongoose.connection.db.dropDatabase();
+
     // Register a test user
     const userData = {
       name: 'Load Test User',
@@ -19,6 +31,10 @@ describe('Load Tests', () => {
       .post('/api/auth/register')
       .send(userData);
 
+    if (!registerResponse.body || !registerResponse.body.success) {
+      console.error("REGISTRATION FAILED in load.test.js beforeAll:", registerResponse.status, registerResponse.body);
+    }
+
     authToken = registerResponse.body.data.tokens.accessToken;
     userId = registerResponse.body.data.user.id;
 
@@ -27,8 +43,11 @@ describe('Load Tests', () => {
       .post('/api/customer/vehicles')
       .set('Authorization', `Bearer ${authToken}`)
       .send({
+        name: 'Load Test Vehicle',
         type: 'car',
+        make: 'Toyota',
         model: 'Load Test Vehicle',
+        year: 2020,
         plate: 'LOAD123'
       });
   });
@@ -61,7 +80,7 @@ describe('Load Tests', () => {
     test('should handle multiple concurrent service requests', async () => {
       const requestPromises = Array(5).fill().map((_, index) => 
         request(app)
-          .post('/api/customer/requests')
+          .post('/api/customer/service-requests')
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             issueType: 'engine_trouble',
@@ -76,7 +95,8 @@ describe('Load Tests', () => {
               lng: -74.0060 + (index * 0.001),
               address: `Load Test Location ${index}`
             },
-            priority: 'medium'
+            priority: 'medium',
+            userExpectedPrice: 100
           })
       );
 
@@ -115,8 +135,11 @@ describe('Load Tests', () => {
           .post('/api/customer/vehicles')
           .set('Authorization', `Bearer ${authToken}`)
           .send({
+            name: `Stress Vehicle ${index}`,
             type: 'car',
+            make: 'Toyota',
             model: `Stress Test Vehicle ${index}`,
+            year: 2020,
             plate: `STRESS${index}`
           })
       );
@@ -150,7 +173,7 @@ describe('Load Tests', () => {
       const largeDescription = 'A'.repeat(500); // Maximum allowed description
       
       const response = await request(app)
-        .post('/api/customer/requests')
+        .post('/api/customer/service-requests')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           issueType: 'other',
@@ -165,7 +188,8 @@ describe('Load Tests', () => {
             lng: -74.0060,
             address: 'Performance Test Location'
           },
-          priority: 'low'
+          priority: 'low',
+          userExpectedPrice: 100
         });
 
       expect(response.status).toBe(201);
@@ -191,7 +215,7 @@ describe('Load Tests', () => {
     test('should handle invalid requests gracefully under load', async () => {
       const invalidPromises = Array(10).fill().map(() => 
         request(app)
-          .post('/api/customer/requests')
+          .post('/api/customer/service-requests')
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             issueType: 'invalid_type',
@@ -225,5 +249,13 @@ describe('Load Tests', () => {
         expect(response.body.success).toBe(false);
       });
     });
+  });
+
+  afterAll(async () => {
+    global.isLoadTest = false;
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.connection.db.dropDatabase();
+      await mongoose.connection.close();
+    }
   });
 });

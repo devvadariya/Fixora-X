@@ -1,14 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { useAuth } from '../../contexts/AuthContext';
-import Button from '../common/Button';
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import Button from "../common/Button";
 
-const OTPModal = ({ isOpen, onClose, email, onSuccess, type = 'login' }) => {
-  const { verifyOTP, verifyRegistrationOTP, resendOTP, loading, error } = useAuth();
-  const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
+const OTPModal = ({ isOpen, onClose, email, onSuccess, type = "login" }) => {
+  const { verifyOTP, verifyRegistrationOTP, resendOTP, loading, error } =
+    useAuth();
+  const [otpValues, setOtpValues] = useState(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef([]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen, onClose]);
 
   // Timer for resend OTP
   useEffect(() => {
@@ -23,7 +35,7 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, type = 'login' }) => {
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      setOtpValues(['', '', '', '', '', '']);
+      setOtpValues(["", "", "", "", "", ""]);
       setTimeLeft(60);
       setCanResend(false);
       // Focus first input
@@ -36,7 +48,7 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, type = 'login' }) => {
   // Handle OTP input change
   const handleOTPChange = (index, value) => {
     if (value.length > 1) return; // Prevent multiple characters
-    
+
     const newOtpValues = [...otpValues];
     newOtpValues[index] = value;
     setOtpValues(newOtpValues);
@@ -49,7 +61,7 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, type = 'login' }) => {
 
   // Handle backspace
   const handleKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
+    if (e.key === "Backspace" && !otpValues[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
@@ -57,25 +69,25 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, type = 'login' }) => {
   // Handle paste
   const handlePaste = (e) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text');
-    const pastedNumbers = pastedData.replace(/\D/g, '').slice(0, 6);
-    
+    const pastedData = e.clipboardData.getData("text");
+    const pastedNumbers = pastedData.replace(/\D/g, "").slice(0, 6);
+
     if (pastedNumbers.length === 6) {
-      setOtpValues(pastedNumbers.split(''));
+      setOtpValues(pastedNumbers.split(""));
       inputRefs.current[5]?.focus();
     }
   };
 
   // Verify OTP
   const handleVerifyOTP = async () => {
-    const otp = otpValues.join('');
-    
+    const otp = otpValues.join("");
+
     if (otp.length !== 6) {
       return;
     }
 
     try {
-      if (type === 'login') {
+      if (type === "login") {
         await verifyOTP(email, otp);
       } else {
         await verifyRegistrationOTP(email, otp);
@@ -84,7 +96,7 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, type = 'login' }) => {
     } catch (error) {
       // Error handled by context
       // Clear OTP inputs
-      setOtpValues(['', '', '', '', '', '']);
+      setOtpValues(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     }
   };
@@ -104,97 +116,99 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, type = 'login' }) => {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background overlay */}
-        <div 
-          className="fixed inset-0 bg-secondary-500 bg-opacity-75 transition-opacity"
+      <div className="flex min-h-screen items-center justify-center px-4 py-6 text-center sm:px-6">
+        <div
+          className="fixed inset-0 bg-primary-900/70 backdrop-blur-sm transition-opacity"
           onClick={onClose}
-        ></div>
+        />
 
-        {/* Modal panel */}
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="sm:flex sm:items-start">
-              <div className="w-full">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-secondary-900">
-                    Verify OTP
-                  </h3>
-                  <button
-                    onClick={onClose}
-                    className="text-secondary-400 hover:text-secondary-600"
-                  >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
-                </div>
+        <div
+          className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-hairline bg-white text-left shadow-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="otp-dialog-title"
+        >
+          <div className="flex items-start justify-between border-b border-hairline px-6 py-5 sm:px-7">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-secondary-500">
+                Verification code
+              </p>
+              <h3
+                id="otp-dialog-title"
+                className="mt-2 text-2xl font-semibold tracking-tight text-primary-900"
+              >
+                Verify your account
+              </h3>
+            </div>
+            <button
+              onClick={onClose}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-hairline text-secondary-500 transition-colors hover:border-secondary-400 hover:text-primary-900"
+              aria-label="Close verification dialog"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
 
-                <p className="text-sm text-secondary-600 mb-6">
-                  We've sent a 6-digit verification code to{' '}
-                  <span className="font-medium">{email}</span>
-                </p>
+          <div className="space-y-6 px-6 py-6 sm:px-7">
+            <p className="text-sm leading-7 text-secondary-600">
+              We sent a 6-digit verification code to{" "}
+              <span className="font-medium text-primary-900">{email}</span>.
+            </p>
 
-                {/* OTP Input */}
-                <div className="flex space-x-2 justify-center mb-6">
-                  {otpValues.map((value, index) => (
-                    <input
-                      key={index}
-                      ref={(el) => (inputRefs.current[index] = el)}
-                      type="text"
-                      maxLength="1"
-                      value={value}
-                      onChange={(e) => handleOTPChange(index, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(index, e)}
-                      onPaste={handlePaste}
-                      className="w-12 h-12 text-center text-lg font-medium border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  ))}
-                </div>
+            <div className="grid grid-cols-6 gap-3">
+              {otpValues.map((value, index) => (
+                <input
+                  key={index}
+                  ref={(el) => (inputRefs.current[index] = el)}
+                  type="text"
+                  maxLength="1"
+                  value={value}
+                  onChange={(e) => handleOTPChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  onPaste={handlePaste}
+                  className="h-14 rounded-2xl border border-hairline bg-surface text-center text-lg font-semibold text-primary-900 outline-none transition-colors focus:border-primary-900 focus-visible:ring-2 focus:ring-primary-900/10"
+                />
+              ))}
+            </div>
 
-                {/* Error message */}
-                {error && (
-                  <div className="mb-4 p-3 rounded-md bg-danger-50">
-                    <p className="text-sm text-danger-700">{error}</p>
-                  </div>
-                )}
-
-                {/* Resend OTP */}
-                <div className="text-center mb-6">
-                  {canResend ? (
-                    <button
-                      onClick={handleResendOTP}
-                      className="text-sm text-primary-600 hover:text-primary-500 font-medium"
-                      disabled={loading}
-                    >
-                      Resend OTP
-                    </button>
-                  ) : (
-                    <p className="text-sm text-secondary-500">
-                      Resend OTP in {timeLeft}s
-                    </p>
-                  )}
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex space-x-3">
-                  <Button
-                    variant="secondary"
-                    onClick={onClose}
-                    className="flex-1"
-                    disabled={loading}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={handleVerifyOTP}
-                    className="flex-1"
-                    loading={loading}
-                    disabled={loading || otpValues.join('').length !== 6}
-                  >
-                    Verify
-                  </Button>
-                </div>
+            {error && (
+              <div className="rounded-2xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
+                {error}
               </div>
+            )}
+
+            <div className="text-center text-sm text-secondary-500">
+              {canResend ? (
+                <button
+                  onClick={handleResendOTP}
+                  className="font-medium text-primary-900 underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={loading}
+                >
+                  Resend code
+                </button>
+              ) : (
+                <p>Resend code in {timeLeft}s</p>
+              )}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button
+                variant="secondary"
+                onClick={onClose}
+                disabled={loading}
+                fullWidth
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleVerifyOTP}
+                loading={loading}
+                disabled={loading || otpValues.join("").length !== 6}
+                fullWidth
+              >
+                Verify code
+              </Button>
             </div>
           </div>
         </div>

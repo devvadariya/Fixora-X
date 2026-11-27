@@ -74,7 +74,7 @@ const PaymentReceiptModal = ({ isOpen, onClose, payment }) => {
             .grid { display: grid; }
             .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
             .gap-4 { gap: 1rem; }
-            .bg-gray-50 { background-color: #f9fafb; }
+            .bg-surface { background-color: #f9fafb; }
             .p-4 { padding: 1rem; }
             .rounded { border-radius: 0.375rem; }
             @media print {
@@ -97,12 +97,12 @@ const PaymentReceiptModal = ({ isOpen, onClose, payment }) => {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'text-yellow-600 bg-yellow-100',
-      success: 'text-green-600 bg-green-100',
-      failed: 'text-red-600 bg-red-100',
-      refunded: 'text-gray-600 bg-gray-100'
+      pending: 'text-warning-700 bg-warning-50',
+      success: 'text-success-700 bg-success-50',
+      failed: 'text-danger-700 bg-danger-50',
+      refunded: 'text-secondary-600 bg-surface'
     };
-    return colors[status] || 'text-gray-600 bg-gray-100';
+    return colors[status] || 'text-secondary-600 bg-surface';
   };
 
   if (!isOpen || !payment) return null;

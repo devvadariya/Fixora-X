@@ -5,6 +5,7 @@ const Review = require('../models/Review');
 const MechanicVerification = require('../models/MechanicVerification');
 const logger = require('../config/logger');
 const notificationService = require('../services/notificationService');
+const aiQuotationService = require('../services/aiQuotationService');
 const mongoose = require('mongoose');
 
 /**
@@ -1964,6 +1965,5 @@ module.exports = {
   getServiceAreas,
   addServiceArea,
   removeServiceArea,
-  updateAvailability,
   redeemWallet
 };

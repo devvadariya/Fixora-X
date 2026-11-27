@@ -1,94 +1,99 @@
-import React, { useState } from 'react';
-import { 
-  XMarkIcon,
+import {
+  CalendarIcon,
   CheckIcon,
   CreditCardIcon,
+  LockClosedIcon,
   UserIcon,
-  CalendarIcon,
-  LockClosedIcon
-} from '@heroicons/react/24/outline';
-import Button from '../common/Button';
-import toast from 'react-hot-toast';
-import paymentService from '../../services/paymentService'; // Add paymentService
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { useState } from "react";
+import toast from "react-hot-toast";
+import paymentService from "../../services/paymentService"; // Add paymentService
+import Button from "../common/Button";
 
-const DemoPaymentModal = ({ isOpen, onClose, serviceRequest, onPaymentSuccess }) => {
-  const [paymentStep, setPaymentStep] = useState('details'); // 'details', 'processing', 'success'
+const DemoPaymentModal = ({
+  isOpen,
+  onClose,
+  serviceRequest,
+  onPaymentSuccess,
+}) => {
+  const [paymentStep, setPaymentStep] = useState("details"); // 'details', 'processing', 'success'
   const [formData, setFormData] = useState({
-    cardNumber: '',
-    cardHolder: '',
-    expiryDate: '',
-    cvv: '',
-    amount: serviceRequest?.quotation || serviceRequest?.finalAmount || 500
+    cardNumber: "",
+    cardHolder: "",
+    expiryDate: "",
+    cvv: "",
+    amount: serviceRequest?.quotation || serviceRequest?.finalAmount || 500,
   });
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const formatCardNumber = (value) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
     const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || '';
+    const match = (matches && matches[0]) || "";
     const parts = [];
     for (let i = 0, len = match.length; i < len; i += 4) {
       parts.push(match.substring(i, i + 4));
     }
     if (parts.length) {
-      return parts.join(' ');
+      return parts.join(" ");
     } else {
       return v;
     }
   };
 
   const formatExpiryDate = (value) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
     if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
+      return v.substring(0, 2) + "/" + v.substring(2, 4);
     }
     return v;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Basic validation
-    if (!formData.cardNumber.replace(/\s/g, '').match(/^\d{16}$/)) {
-      toast.error('Please enter a valid 16-digit card number');
+    if (!formData.cardNumber.replace(/\s/g, "").match(/^\d{16}$/)) {
+      toast.error("Please enter a valid 16-digit card number");
       return;
     }
     if (!formData.cardHolder.trim()) {
-      toast.error('Please enter card holder name');
+      toast.error("Please enter card holder name");
       return;
     }
     if (!formData.expiryDate.match(/^\d{2}\/\d{2}$/)) {
-      toast.error('Please enter valid expiry date (MM/YY)');
+      toast.error("Please enter valid expiry date (MM/YY)");
       return;
     }
     if (!formData.cvv.match(/^\d{3,4}$/)) {
-      toast.error('Please enter valid CVV');
+      toast.error("Please enter valid CVV");
       return;
     }
 
     setLoading(true);
-    setPaymentStep('processing');
+    setPaymentStep("processing");
 
     try {
       // Connect to the backend route to process the payment
       const response = await paymentService.processDemoPayment({
         serviceRequestId: serviceRequest._id,
         amount: formData.amount,
-        paymentMethod: 'card'
+        paymentMethod: "card",
       });
 
       if (response.success) {
-        setPaymentStep('success');
+        setPaymentStep("success");
         setLoading(false);
-        toast.success('Payment completed successfully!');
-        
+        toast.success("Payment completed successfully!");
+
         // Auto close after 2 seconds
         setTimeout(() => {
           onPaymentSuccess && onPaymentSuccess(response.data);
@@ -97,8 +102,8 @@ const DemoPaymentModal = ({ isOpen, onClose, serviceRequest, onPaymentSuccess })
       }
     } catch (error) {
       setLoading(false);
-      setPaymentStep('details');
-      toast.error(error.message || 'Payment processing failed');
+      setPaymentStep("details");
+      toast.error(error.message || "Payment processing failed");
     }
   };
 
@@ -106,7 +111,7 @@ const DemoPaymentModal = ({ isOpen, onClose, serviceRequest, onPaymentSuccess })
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl transform transition-all duration-300 scale-100">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-modal transform transition-all duration-300 scale-100">
         {/* Header */}
         <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white p-6 rounded-t-2xl">
           <div className="flex justify-between items-center">
@@ -116,7 +121,7 @@ const DemoPaymentModal = ({ isOpen, onClose, serviceRequest, onPaymentSuccess })
             </div>
             <button
               onClick={onClose}
-              className="text-white hover:text-green-200 transition-colors duration-200 p-2 rounded-full hover:bg-white hover:bg-opacity-20"
+              className="text-white hover:text-success-200 transition-colors duration-200 p-2 rounded-full hover:bg-white hover:bg-opacity-20"
             >
               <XMarkIcon className="h-5 w-5" />
             </button>
@@ -124,27 +129,34 @@ const DemoPaymentModal = ({ isOpen, onClose, serviceRequest, onPaymentSuccess })
         </div>
 
         <div className="p-6">
-          {paymentStep === 'details' && (
+          {paymentStep === "details" && (
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Amount Display */}
-              <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-sm text-gray-600 mb-1">Payment Amount</div>
-                <div className="text-2xl font-bold text-gray-900">₹{formData.amount}</div>
+              <div className="bg-surface rounded-lg p-4 text-center">
+                <div className="text-sm text-secondary-600 mb-1">Payment Amount</div>
+                <div className="text-2xl font-bold text-ink">
+                  ₹{formData.amount}
+                </div>
               </div>
 
               {/* Card Number */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
                   Card Number
                 </label>
                 <div className="relative">
-                  <CreditCardIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <CreditCardIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-secondary-400" />
                   <input
                     type="text"
                     value={formData.cardNumber}
-                    onChange={(e) => handleInputChange('cardNumber', formatCardNumber(e.target.value))}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "cardNumber",
+                        formatCardNumber(e.target.value),
+                      )
+                    }
                     placeholder="1234 5678 9012 3456"
-                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full rounded-lg border-2 border-hairline py-3 pl-10 pr-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-600 focus-visible:ring-offset-0 focus:border-success-600"
                     maxLength="19"
                     required
                   />
@@ -153,17 +165,19 @@ const DemoPaymentModal = ({ isOpen, onClose, serviceRequest, onPaymentSuccess })
 
               {/* Card Holder */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
                   Card Holder Name
                 </label>
                 <div className="relative">
-                  <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-secondary-400" />
                   <input
                     type="text"
                     value={formData.cardHolder}
-                    onChange={(e) => handleInputChange('cardHolder', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("cardHolder", e.target.value)
+                    }
                     placeholder="John Doe"
-                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full rounded-lg border-2 border-hairline py-3 pl-10 pr-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-600 focus-visible:ring-offset-0 focus:border-success-600"
                     required
                   />
                 </div>
@@ -172,34 +186,44 @@ const DemoPaymentModal = ({ isOpen, onClose, serviceRequest, onPaymentSuccess })
               {/* Expiry and CVV */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
                     Expiry Date
                   </label>
                   <div className="relative">
-                    <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-secondary-400" />
                     <input
                       type="text"
                       value={formData.expiryDate}
-                      onChange={(e) => handleInputChange('expiryDate', formatExpiryDate(e.target.value))}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "expiryDate",
+                          formatExpiryDate(e.target.value),
+                        )
+                      }
                       placeholder="MM/YY"
-                      className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full rounded-lg border-2 border-hairline py-3 pl-10 pr-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-600 focus-visible:ring-offset-0 focus:border-success-600"
                       maxLength="5"
                       required
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
                     CVV
                   </label>
                   <div className="relative">
-                    <LockClosedIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <LockClosedIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-secondary-400" />
                     <input
                       type="text"
                       value={formData.cvv}
-                      onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, ''))}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "cvv",
+                          e.target.value.replace(/\D/g, ""),
+                        )
+                      }
                       placeholder="123"
-                      className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full rounded-lg border-2 border-hairline py-3 pl-10 pr-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-success-600 focus-visible:ring-offset-0 focus:border-success-600"
                       maxLength="4"
                       required
                     />
@@ -208,9 +232,10 @@ const DemoPaymentModal = ({ isOpen, onClose, serviceRequest, onPaymentSuccess })
               </div>
 
               {/* Demo Notice */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="text-sm text-blue-800">
-                  <strong>Demo Mode:</strong> This is a test payment form. Any valid-looking card details will be accepted.
+              <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
+                <div className="text-sm text-primary-900">
+                  <strong>Demo Mode:</strong> This is a test payment form. Any
+                  valid-looking card details will be accepted.
                 </div>
               </div>
 
@@ -226,23 +251,32 @@ const DemoPaymentModal = ({ isOpen, onClose, serviceRequest, onPaymentSuccess })
             </form>
           )}
 
-          {paymentStep === 'processing' && (
+          {paymentStep === "processing" && (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Processing Payment...</h3>
-              <p className="text-gray-600">Please wait while we process your payment</p>
+              <h3 className="text-lg font-semibold text-ink mb-2">
+                Processing Payment...
+              </h3>
+              <p className="text-secondary-600">
+                Please wait while we process your payment
+              </p>
             </div>
           )}
 
-          {paymentStep === 'success' && (
+          {paymentStep === "success" && (
             <div className="text-center py-8">
-              <div className="bg-green-100 rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
-                <CheckIcon className="h-8 w-8 text-green-600" />
+              <div className="bg-success-50 rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
+                <CheckIcon className="h-8 w-8 text-success-700" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Payment Successful!</h3>
-              <p className="text-gray-600 mb-4">Your payment of ₹{formData.amount} has been processed successfully.</p>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="text-sm text-green-800">
+              <h3 className="text-lg font-semibold text-ink mb-2">
+                Payment Successful!
+              </h3>
+              <p className="text-secondary-600 mb-4">
+                Your payment of ₹{formData.amount} has been processed
+                successfully.
+              </p>
+              <div className="bg-success-50 border border-success-200 rounded-lg p-4">
+                <div className="text-sm text-success-700">
                   <strong>Transaction ID:</strong> DEMO_{Date.now()}
                 </div>
               </div>

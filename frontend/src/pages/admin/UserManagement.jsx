@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  MagnifyingGlassIcon, 
+import {
+  MagnifyingGlassIcon,
   FunnelIcon,
   EyeIcon,
   PencilIcon,
@@ -8,7 +8,7 @@ import {
   XCircleIcon,
   UserIcon,
   WrenchScrewdriverIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import adminService from '../../services/adminService';
 import { formatDate } from '../../utils/helpers';
@@ -25,13 +25,13 @@ const UserManagement = () => {
     isActive: '',
     search: '',
     sortBy: 'createdAt',
-    sortOrder: 'desc'
+    sortOrder: 'desc',
   });
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
     totalPages: 0,
-    totalItems: 0
+    totalItems: 0,
   });
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -42,38 +42,35 @@ const UserManagement = () => {
       const params = {
         ...filters,
         page: pagination.page,
-        limit: pagination.limit
+        limit: pagination.limit,
       };
 
-      console.log('Fetching users with params:', params);
       const response = await adminService.getUsers(params);
-      console.log('Users response:', response);
-      
+
       if (response.success) {
         setUsers(response.data.users || []);
-        setPagination(prev => ({
+        setPagination((prev) => ({
           ...prev,
           totalPages: response.data.pagination?.totalPages || 0,
-          totalItems: response.data.pagination?.totalItems || 0
+          totalItems: response.data.pagination?.totalItems || 0,
         }));
       } else {
-        console.error('API returned success: false:', response);
         toast.error(response.message || 'Failed to fetch users');
         setUsers([]);
-        setPagination(prev => ({
+        setPagination((prev) => ({
           ...prev,
           totalPages: 0,
-          totalItems: 0
+          totalItems: 0,
         }));
       }
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error(error.message || 'Failed to fetch users');
       setUsers([]);
-      setPagination(prev => ({
+      setPagination((prev) => ({
         ...prev,
         totalPages: 0,
-        totalItems: 0
+        totalItems: 0,
       }));
     } finally {
       setLoading(false);
@@ -85,17 +82,17 @@ const UserManagement = () => {
   }, [fetchUsers]);
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const handleUserStatusChange = async (userId, isActive) => {
     try {
       const response = await adminService.updateUserStatus(userId, { isActive });
-      
+
       if (response.success) {
         toast.success(`User ${isActive ? 'activated' : 'deactivated'} successfully`);
-        fetchUsers(); // Refresh the list
+        fetchUsers();
       }
     } catch (error) {
       console.error('Error updating user status:', error);
@@ -106,10 +103,10 @@ const UserManagement = () => {
   const handleVerifyUser = async (userId) => {
     try {
       const response = await adminService.verifyUser(userId);
-      
+
       if (response.success) {
         toast.success('User verified successfully');
-        fetchUsers(); // Refresh the list
+        fetchUsers();
       }
     } catch (error) {
       console.error('Error verifying user:', error);
@@ -126,7 +123,7 @@ const UserManagement = () => {
     try {
       const response = await adminService.bulkUserActions({
         userIds: selectedUsers,
-        action
+        action,
       });
 
       if (response.success) {
@@ -142,7 +139,7 @@ const UserManagement = () => {
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedUsers(users.map(user => user._id));
+      setSelectedUsers(users.map((user) => user._id));
     } else {
       setSelectedUsers([]);
     }
@@ -150,98 +147,85 @@ const UserManagement = () => {
 
   const handleSelectUser = (userId, checked) => {
     if (checked) {
-      setSelectedUsers(prev => [...prev, userId]);
+      setSelectedUsers((prev) => [...prev, userId]);
     } else {
-      setSelectedUsers(prev => prev.filter(id => id !== userId));
+      setSelectedUsers((prev) => prev.filter((id) => id !== userId));
     }
   };
 
   const getRoleIcon = (role) => {
     switch (role) {
       case 'customer':
-        return <UserIcon className="h-5 w-5 text-blue-600" />;
+        return <UserIcon className="h-5 w-5 text-primary-900" />;
       case 'mechanic':
-        return <WrenchScrewdriverIcon className="h-5 w-5 text-green-600" />;
+        return <WrenchScrewdriverIcon className="h-5 w-5 text-success-700" />;
       case 'admin':
-        return <ShieldCheckIcon className="h-5 w-5 text-purple-600" />;
+        return <ShieldCheckIcon className="h-5 w-5 text-warning-700" />;
       default:
-        return <UserIcon className="h-5 w-5 text-gray-600" />;
+        return <UserIcon className="h-5 w-5 text-secondary-500" />;
     }
   };
 
   const getRoleBadge = (role) => {
-    const baseClasses = "px-2 py-1 text-xs font-medium rounded-full";
+    const baseClasses = 'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium';
     switch (role) {
       case 'customer':
-        return `${baseClasses} bg-blue-100 text-blue-800`;
+        return `${baseClasses} bg-primary-100 text-primary-900`;
       case 'mechanic':
-        return `${baseClasses} bg-green-100 text-green-800`;
+        return `${baseClasses} bg-success-50 text-success-700`;
       case 'admin':
-        return `${baseClasses} bg-purple-100 text-purple-800`;
+        return `${baseClasses} bg-warning-50 text-warning-700`;
       default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
+        return `${baseClasses} bg-surface text-secondary-700`;
     }
   };
 
   const getStatusBadge = (isActive, isVerified) => {
-    const baseClasses = "px-2 py-1 text-xs font-medium rounded-full";
-    
+    const baseClasses = 'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium';
+
     if (!isActive) {
-      return `${baseClasses} bg-red-100 text-red-800`;
+      return `${baseClasses} bg-danger-50 text-danger-700`;
     }
-    
+
     if (!isVerified) {
-      return `${baseClasses} bg-yellow-100 text-yellow-800`;
+      return `${baseClasses} bg-warning-50 text-warning-700`;
     }
-    
-    return `${baseClasses} bg-green-100 text-green-800`;
+
+    return `${baseClasses} bg-success-50 text-success-700`;
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600">Manage all users on the platform</p>
+          <h1 className="text-2xl font-semibold tracking-[-0.04em] text-ink">User management</h1>
+          <p className="text-sm text-secondary-600">Manage all users on the platform</p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex gap-2">
           {selectedUsers.length > 0 && (
             <>
-              <Button
-                variant="secondary"
-                onClick={() => handleBulkAction('activate')}
-                disabled={loading}
-              >
-                Activate Selected
+              <Button variant="secondary" onClick={() => handleBulkAction('activate')} disabled={loading}>
+                Activate selected
               </Button>
-              <Button
-                variant="secondary"
-                onClick={() => handleBulkAction('deactivate')}
-                disabled={loading}
-              >
-                Deactivate Selected
+              <Button variant="secondary" onClick={() => handleBulkAction('deactivate')} disabled={loading}>
+                Deactivate selected
               </Button>
             </>
           )}
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-medium text-gray-900">Filters</h2>
-          <Button
-            variant="secondary"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <FunnelIcon className="h-4 w-4 mr-2" />
-            {showFilters ? 'Hide' : 'Show'} Filters
+      <div className="rounded-2xl border border-hairline bg-white p-6 shadow-card">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-medium text-ink">Filters</h2>
+          <Button variant="secondary" onClick={() => setShowFilters(!showFilters)}>
+            <FunnelIcon className="mr-2 h-4 w-4" />
+            {showFilters ? 'Hide' : 'Show'} filters
           </Button>
         </div>
 
         {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <Input
               label="Search"
               placeholder="Search by name, email, or phone"
@@ -250,33 +234,21 @@ const UserManagement = () => {
               icon={<MagnifyingGlassIcon className="h-4 w-4" />}
             />
 
-            <Select
-              label="Role"
-              value={filters.role}
-              onChange={(e) => handleFilterChange('role', e.target.value)}
-            >
-              <option value="">All Roles</option>
+            <Select label="Role" value={filters.role} onChange={(e) => handleFilterChange('role', e.target.value)}>
+              <option value="">All roles</option>
               <option value="customer">Customer</option>
               <option value="mechanic">Mechanic</option>
               <option value="admin">Admin</option>
             </Select>
 
-            <Select
-              label="Status"
-              value={filters.isActive}
-              onChange={(e) => handleFilterChange('isActive', e.target.value)}
-            >
-              <option value="">All Status</option>
+            <Select label="Status" value={filters.isActive} onChange={(e) => handleFilterChange('isActive', e.target.value)}>
+              <option value="">All status</option>
               <option value="true">Active</option>
               <option value="false">Inactive</option>
             </Select>
 
-            <Select
-              label="Sort By"
-              value={filters.sortBy}
-              onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-            >
-              <option value="createdAt">Registration Date</option>
+            <Select label="Sort by" value={filters.sortBy} onChange={(e) => handleFilterChange('sortBy', e.target.value)}>
+              <option value="createdAt">Registration date</option>
               <option value="name">Name</option>
               <option value="email">Email</option>
               <option value="rating">Rating</option>
@@ -285,144 +257,101 @@ const UserManagement = () => {
         )}
       </div>
 
-      {/* Users Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
+      <div className="overflow-hidden rounded-2xl border border-hairline bg-white shadow-card">
+        <div className="border-b border-hairline px-6 py-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium text-gray-900">
-              Users ({pagination.totalItems})
-            </h2>
-            <div className="flex items-center space-x-2">
+            <h2 className="text-lg font-medium text-ink">Users ({pagination.totalItems})</h2>
+            <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={selectedUsers.length === users.length && users.length > 0}
                 onChange={(e) => handleSelectAll(e.target.checked)}
-                className="rounded border-gray-300"
+                className="h-4 w-4 rounded border-hairline text-primary-900 focus:ring-primary-900"
               />
-              <span className="text-sm text-gray-600">Select All</span>
+              <span className="text-sm text-secondary-600">Select all</span>
             </div>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary-900" />
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-hairline">
+              <thead className="bg-surface">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Joined
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.15em] text-secondary-500">User</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.15em] text-secondary-500">Role</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.15em] text-secondary-500">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.15em] text-secondary-500">Joined</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.15em] text-secondary-500">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-hairline bg-white">
                 {users.map((user) => (
-                  <tr key={user._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <tr key={user._id} className="hover:bg-surface">
+                    <td className="whitespace-nowrap px-6 py-4">
                       <div className="flex items-center">
                         <input
                           type="checkbox"
                           checked={selectedUsers.includes(user._id)}
                           onChange={(e) => handleSelectUser(user._id, e.target.checked)}
-                          className="rounded border-gray-300 mr-3"
+                          className="mr-3 h-4 w-4 rounded border-hairline text-primary-900 focus:ring-primary-900"
                         />
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
+                          <div className="h-10 w-10 flex-shrink-0">
                             {user.avatar ? (
-                              <img
-                                className="h-10 w-10 rounded-full"
-                                src={user.avatar}
-                                alt={user.name}
-                              />
+                              <img className="h-10 w-10 rounded-full object-cover" src={user.avatar} alt={user.name} />
                             ) : (
-                              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-secondary-600">
                                 {getRoleIcon(user.role)}
                               </div>
                             )}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {user.name}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {user.email}
-                            </div>
-                            {user.phone && (
-                              <div className="text-sm text-gray-500">
-                                {user.phone}
-                              </div>
-                            )}
+                            <div className="text-sm font-medium text-ink">{user.name}</div>
+                            <div className="text-sm text-secondary-500">{user.email}</div>
+                            {user.phone && <div className="text-sm text-secondary-500">{user.phone}</div>}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={getRoleBadge(user.role)}>
-                        {user.role}
-                      </span>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <span className={getRoleBadge(user.role)}>{user.role}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="whitespace-nowrap px-6 py-4">
                       <span className={getStatusBadge(user.isActive, user.isVerified)}>
                         {!user.isActive ? 'Inactive' : !user.isVerified ? 'Unverified' : 'Active'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(user.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-secondary-500">{formatDate(user.createdAt)}</td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleUserStatusChange(user._id, !user.isActive)}
-                          className={`p-1 rounded ${
-                            user.isActive 
-                              ? 'text-red-600 hover:text-red-900' 
-                              : 'text-green-600 hover:text-green-900'
-                          }`}
+                          className={`rounded p-1 ${user.isActive ? 'text-danger-700 hover:text-danger-900' : 'text-success-700 hover:text-success-900'}`}
                           title={user.isActive ? 'Deactivate' : 'Activate'}
                         >
-                          {user.isActive ? (
-                            <XCircleIcon className="h-4 w-4" />
-                          ) : (
-                            <CheckCircleIcon className="h-4 w-4" />
-                          )}
+                          {user.isActive ? <XCircleIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />}
                         </button>
-                        
+
                         {!user.isVerified && (
                           <button
                             onClick={() => handleVerifyUser(user._id)}
-                            className="p-1 rounded text-blue-600 hover:text-blue-900"
-                            title="Verify User"
+                            className="rounded p-1 text-primary-900 hover:text-primary-700"
+                            title="Verify user"
                           >
                             <CheckCircleIcon className="h-4 w-4" />
                           </button>
                         )}
-                        
-                        <button
-                          className="p-1 rounded text-gray-600 hover:text-gray-900"
-                          title="View Details"
-                        >
+
+                        <button className="rounded p-1 text-secondary-600 hover:text-ink" title="View details">
                           <EyeIcon className="h-4 w-4" />
                         </button>
-                        
-                        <button
-                          className="p-1 rounded text-gray-600 hover:text-gray-900"
-                          title="Edit User"
-                        >
+
+                        <button className="rounded p-1 text-secondary-600 hover:text-ink" title="Edit user">
                           <PencilIcon className="h-4 w-4" />
                         </button>
                       </div>
@@ -434,26 +363,24 @@ const UserManagement = () => {
           </div>
         )}
 
-        {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200">
+          <div className="border-t border-hairline px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-secondary-700">
                 Showing {((pagination.page - 1) * pagination.limit) + 1} to{' '}
-                {Math.min(pagination.page * pagination.limit, pagination.totalItems)} of{' '}
-                {pagination.totalItems} results
+                {Math.min(pagination.page * pagination.limit, pagination.totalItems)} of {pagination.totalItems} results
               </div>
-              <div className="flex space-x-2">
+              <div className="flex gap-2">
                 <Button
                   variant="secondary"
-                  onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
                   disabled={pagination.page === 1}
                 >
                   Previous
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
                   disabled={pagination.page === pagination.totalPages}
                 >
                   Next

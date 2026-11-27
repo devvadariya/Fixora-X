@@ -1,52 +1,63 @@
-import React from 'react';
+import { useId } from "react";
 
-const Select = ({ 
-  label, 
-  name, 
-  value, 
-  onChange, 
-  error, 
-  children, 
+const Select = ({
+  label,
+  name,
+  value,
+  onChange,
+  error,
+  children,
   required = false,
   disabled = false,
-  className = '',
-  ...props 
+  className = "",
+  ...props
 }) => {
+  const generatedId = useId();
+  const selectId = props.id || name || `select-${generatedId}`;
+  const errorId = error ? `${selectId}-error` : undefined;
+
   return (
-    <div className={`mb-4 ${className}`}>
+    <div className={`w-full ${className}`}>
       {label && (
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor={selectId}
+          className="mb-1.5 block text-sm font-medium text-secondary-700"
+        >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="ml-1 text-danger-500">*</span>}
         </label>
       )}
-      
+
       <select
-        id={name}
+        id={selectId}
         name={name}
         value={value}
         onChange={onChange}
         disabled={disabled}
+        aria-invalid={!!error}
+        aria-required={required || undefined}
+        aria-describedby={errorId}
         className={`
-          w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
-          ${error 
-            ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500' 
-            : 'border-gray-300 text-gray-900 placeholder-gray-500'
+          w-full min-h-11 rounded-md border bg-white px-4 py-2.5 text-sm text-secondary-900 shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 sm:min-h-10
+          ${
+            error
+              ? "border-danger-600 focus:border-danger-600 focus-visible:ring-danger-600"
+              : "border-hairline focus:border-primary-900 focus-visible:ring-primary-900"
           }
-          ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
+          ${disabled ? "cursor-not-allowed bg-secondary-50 text-secondary-500" : "bg-white"}
         `}
         {...props}
       >
         {children}
       </select>
-      
+
       {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p id={errorId} className="mt-1 text-sm text-danger-600">
+          {error}
+        </p>
       )}
     </div>
   );
 };
 
 export default Select;
-
-

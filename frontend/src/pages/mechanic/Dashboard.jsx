@@ -15,6 +15,8 @@ import {
   ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline';
 import Button from '../../components/common/Button';
+import Card from '../../components/common/Card';
+import MechanicSurface from '../../components/mechanic/MechanicSurface';
 import VerificationForm from '../../components/mechanic/VerificationForm';
 import NavigationModal from '../../components/mechanic/NavigationModal';
 import RequestDetailsModal from '../../components/mechanic/RequestDetailsModal';
@@ -57,6 +59,25 @@ const MechanicDashboard = () => {
     fetchDashboardData();
     checkVerificationStatus();
     setupSocketListeners();
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            await mechanicApi.updateProfile({
+              location: {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              }
+            });
+          } catch (e) {
+            // Non-critical background update
+          }
+        },
+        () => {},
+        { timeout: 8000 }
+      );
+    }
 
     return () => {
       // Cleanup socket listeners
@@ -163,12 +184,14 @@ const MechanicDashboard = () => {
   const getVerificationStatusDisplay = () => {
     if (!verification) {
       return (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-start space-x-3">
-            <ExclamationTriangleIcon className="h-6 w-6 text-yellow-500 mt-0.5" />
-            <div>
-              <h3 className="text-lg font-medium text-yellow-800">Verification Required</h3>
-              <p className="text-sm text-yellow-700 mt-1">
+        <div className="rounded-[24px] border border-warning-200 bg-warning-50 p-5">
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning-100 text-warning-700">
+              <ExclamationTriangleIcon className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-warning-800">Verification Required</h3>
+              <p className="mt-1 text-sm text-warning-700">
                 You need to complete your shop verification to start receiving service requests.
               </p>
               <Button
@@ -187,24 +210,24 @@ const MechanicDashboard = () => {
 
     const statusConfig = {
       pending: {
-        icon: <ClockIcon className="h-6 w-6 text-warning-500" />,
-        color: 'text-warning-600',
+        icon: <ClockIcon className="h-5 w-5 text-warning-600" />,
+        color: 'text-warning-700',
         bgColor: 'bg-warning-50',
         borderColor: 'border-warning-200',
         title: 'Verification Pending',
         description: 'Your verification request is under review. You can still view requests but cannot accept them yet.'
       },
       approved: {
-        icon: <CheckCircleIcon className="h-6 w-6 text-success-500" />,
-        color: 'text-success-600',
+        icon: <CheckCircleIcon className="h-5 w-5 text-success-600" />,
+        color: 'text-success-700',
         bgColor: 'bg-success-50',
         borderColor: 'border-success-200',
         title: 'Verification Approved',
         description: 'Your account is verified! You can now accept and complete service requests.'
       },
       rejected: {
-        icon: <XCircleIcon className="h-6 w-6 text-danger-500" />,
-        color: 'text-danger-600',
+        icon: <XCircleIcon className="h-5 w-5 text-danger-600" />,
+        color: 'text-danger-700',
         bgColor: 'bg-danger-50',
         borderColor: 'border-danger-200',
         title: 'Verification Rejected',
@@ -215,12 +238,14 @@ const MechanicDashboard = () => {
     const config = statusConfig[verification.status];
 
     return (
-      <div className={`${config.bgColor} border ${config.borderColor} rounded-lg p-4`}>
-        <div className="flex items-start space-x-3">
-          {config.icon}
+      <div className={`${config.bgColor} border ${config.borderColor} rounded-[24px] p-5`}>
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80">
+            {config.icon}
+          </div>
           <div className="flex-1">
-            <h3 className={`font-medium ${config.color}`}>{config.title}</h3>
-            <p className="text-sm text-gray-600 mt-1">{config.description}</p>
+            <h3 className={`text-lg font-semibold ${config.color}`}>{config.title}</h3>
+            <p className="mt-1 text-sm text-secondary-600">{config.description}</p>
             {verification.status === 'rejected' && (
               <Button
                 onClick={() => setShowVerificationForm(true)}
@@ -246,101 +271,104 @@ const MechanicDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-lg text-white p-8 relative overflow-hidden">
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name}! 👋</h1>
-          <p className="text-primary-100 text-lg">
-            Ready to help customers with their vehicle issues? Let's get started!
-          </p>
-          <div className="mt-4 flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-sm">Online & Available</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <ClockIcon className="h-4 w-4" />
-              <span className="text-sm">Last active: Just now</span>
-            </div>
-            <Link to="/mechanic/chat">
-              <Button variant="outline" size="sm" className="flex items-center gap-2 bg-white text-primary-600 hover:bg-primary-50">
-                <ChatBubbleLeftIcon className="w-4 h-4" />
-                View Messages
-              </Button>
-            </Link>
+    <MechanicSurface
+      eyebrow="Mechanic dashboard"
+      title={`Welcome back, ${user?.name || 'mechanic'}.`}
+      description="Monitor incoming work, verification status, and your current availability in one operational view."
+      actions={(
+        <Link to="/mechanic/chat">
+          <Button variant="secondary" icon={<ChatBubbleLeftIcon className="w-4 h-4" />}>
+            View messages
+          </Button>
+        </Link>
+      )}
+      stats={[
+        { value: stats.totalRequests, label: 'total requests' },
+        { value: stats.activeRequests, label: 'active requests' },
+        { value: stats.completedRequests, label: 'completed requests' },
+        { value: formatCurrency(stats.totalEarnings), label: 'total earnings' },
+      ]}
+    >
+      <Card className="border border-hairline bg-surface p-6">
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-secondary-500">Availability</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-primary-900 sm:text-4xl">
+              Stay ready for the next request.
+            </h2>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-secondary-600 sm:text-base">
+              Keep your workflow focused: handle requests, navigate efficiently, and keep customers updated without losing the operational context.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3 lg:justify-end">
+            <span className="inline-flex items-center rounded-full border border-hairline bg-white px-3 py-1.5 text-xs font-medium text-primary-900">Online & available</span>
+            <span className="inline-flex items-center rounded-full border border-hairline bg-white px-3 py-1.5 text-xs font-medium text-primary-900">Last active just now</span>
           </div>
         </div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white bg-opacity-10 rounded-full -ml-12 -mb-12"></div>
-      </div>
+      </Card>
 
       {/* Verification Status */}
       {getVerificationStatusDisplay()}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-[24px] border border-hairline bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Total Requests</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalRequests}</p>
-              <p className="text-xs text-green-600 mt-1"></p>
+              <p className="text-sm font-medium text-secondary-600">Total Requests</p>
+              <p className="mt-2 text-3xl font-semibold tracking-tight text-primary-900">{stats.totalRequests}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <DocumentTextIcon className="h-8 w-8 text-blue-600" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-primary-900">
+              <DocumentTextIcon className="h-5 w-5" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+        <div className="rounded-[24px] border border-hairline bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Active Requests</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.activeRequests}</p>
-              <p className="text-xs text-orange-600 mt-1">Currently working</p>
+              <p className="text-sm font-medium text-secondary-600">Active Requests</p>
+              <p className="mt-2 text-3xl font-semibold tracking-tight text-primary-900">{stats.activeRequests}</p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-xl">
-              <ClockIcon className="h-8 w-8 text-yellow-600" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-warning-50 text-warning-700">
+              <ClockIcon className="h-5 w-5" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+        <div className="rounded-[24px] border border-hairline bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Completed</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.completedRequests}</p>
-              <p className="text-xs text-green-600 mt-1"></p>
+              <p className="text-sm font-medium text-secondary-600">Completed</p>
+              <p className="mt-2 text-3xl font-semibold tracking-tight text-primary-900">{stats.completedRequests}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-xl">
-              <CheckCircleIcon className="h-8 w-8 text-green-600" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-success-50 text-success-700">
+              <CheckCircleIcon className="h-5 w-5" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+        <div className="rounded-[24px] border border-hairline bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Total Earnings</p>
-              <p className="text-3xl font-bold text-gray-900">{formatCurrency(stats.totalEarnings)}</p>
-              <p className="text-xs text-green-600 mt-1"></p>
+              <p className="text-sm font-medium text-secondary-600">Total Earnings</p>
+              <p className="mt-2 text-3xl font-semibold tracking-tight text-primary-900">{formatCurrency(stats.totalEarnings)}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-xl">
-              <CurrencyDollarIcon className="h-8 w-8 text-green-600" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-success-50 text-success-700">
+              <CurrencyDollarIcon className="h-5 w-5" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Recent Requests */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">Recent Requests</h2>
+      <Card className="overflow-hidden p-0">
+        <div className="border-b border-hairline px-6 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold text-primary-900">Recent Requests</h2>
             <Link
               to="/mechanic/requests"
-              className="text-primary-600 hover:text-primary-500 text-sm font-medium"
+              className="text-sm font-medium text-primary-900 underline-offset-4 hover:underline"
             >
               View all
             </Link>
@@ -349,32 +377,30 @@ const MechanicDashboard = () => {
 
         {requests.length === 0 ? (
           <div className="p-6 text-center">
-            <WrenchScrewdriverIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No requests yet</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <WrenchScrewdriverIcon className="mx-auto h-12 w-12 text-secondary-400" />
+            <h3 className="mt-3 text-sm font-semibold text-primary-900">No requests yet</h3>
+            <p className="mt-1 text-sm text-secondary-600">
               {verification?.status === 'approved'
                 ? 'You\'ll see service requests here when they become available.'
-                : 'Complete your verification to start receiving requests.'
-              }
+                : 'Complete your verification to start receiving requests.'}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-hairline-soft">
             {requests.map((request) => (
-              <div key={request._id} className="p-6 hover:bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 flex-1">
-                    {getStatusIcon(request.status)}
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-medium text-gray-900">
+              <div key={request._id} className="p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex flex-1 items-start gap-4">
+                    <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-surface text-primary-900">
+                      {getStatusIcon(request.status)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <h3 className="text-lg font-semibold text-primary-900">
                           {ISSUE_TYPE_LABELS[request.issueType] || request.issueType}
                         </h3>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${request.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            request.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                              'bg-blue-100 text-blue-800'
-                          }`}>
-                          {request.status === 'completed' && request.paymentStatus === 'paid' ? 'Payment Done' : 
+                        <span className="inline-flex w-fit items-center rounded-full border border-hairline bg-surface px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-secondary-700">
+                          {request.status === 'completed' && request.paymentStatus === 'paid' ? 'Payment Done' :
                            request.status === 'completed' ? 'Payment Pending' :
                            request.status === 'offered' ? 'Offered / Waiting' :
                            request.status === 'pending' ? 'Available Nearby' :
@@ -382,65 +408,60 @@ const MechanicDashboard = () => {
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <MapPinIcon className="h-4 w-4 mr-1" />
-                          {request.location.address || 'Location provided'}
+                      <div className="grid gap-3 text-sm text-secondary-600 md:grid-cols-3">
+                        <div className="flex items-center gap-2">
+                          <MapPinIcon className="h-4 w-4 text-secondary-500" />
+                          <span>{request.location.address || 'Location provided'}</span>
                         </div>
                         <div>
-                          <strong>Vehicle:</strong> {request.vehicleInfo.model} ({request.vehicleInfo.plate})
+                          <span className="font-medium text-primary-900">Vehicle:</span> {request.vehicleInfo.model} ({request.vehicleInfo.plate})
                         </div>
                         <div>
-                          <strong>Created:</strong> {formatDate(request.createdAt)}
+                          <span className="font-medium text-primary-900">Created:</span> {formatDate(request.createdAt)}
                         </div>
                       </div>
 
                       {request.description && (
-                        <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                        <p className="mt-3 text-sm leading-6 text-secondary-600">
                           {request.description}
                         </p>
                       )}
 
                       {request.quotation && (
-                        <div className="mt-2 text-sm">
-                          <strong>{request.status === 'pending' ? 'Base Price:' : 'Proposed Price:'}</strong> {formatCurrency(request.status === 'pending' ? (request.basePrice || request.quotation) : (request.mechanicOfferPrice || request.quotation))}
+                        <div className="mt-3 text-sm text-secondary-700">
+                          <span className="font-medium text-primary-900">{request.status === 'pending' ? 'Base Price:' : 'Proposed Price:'}</span> {formatCurrency(request.status === 'pending' ? (request.basePrice || request.quotation) : (request.mechanicOfferPrice || request.quotation))}
                         </div>
                       )}
                       {request.status === 'pending' && request.userExpectedPrice > 0 && (
-                        <div className="mt-1 text-sm text-blue-600">
-                          <strong>Customer Budget:</strong> {formatCurrency(request.userExpectedPrice)}
+                        <div className="mt-1 text-sm text-secondary-600">
+                          <span className="font-medium text-primary-900">Customer Budget:</span> {formatCurrency(request.userExpectedPrice)}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex flex-col space-y-2 ml-6">
+                  <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
                     {request.status === 'pending' ? (
-                      <Link
-                        to={`/mechanic/requests/${request._id}`}
-                        className="inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-success-600 hover:bg-success-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success-500"
-                      >
-                        Accept & Offer Price
+                      <Link to={`/mechanic/requests/${request._id}`}>
+                        <Button variant="primary" size="sm">Accept & Offer Price</Button>
                       </Link>
                     ) : (
-                      <Link
-                        to={`/mechanic/requests/${request._id}`}
-                        className="inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                      >
-                        View Details
+                      <Link to={`/mechanic/requests/${request._id}`}>
+                        <Button variant="secondary" size="sm">View Details</Button>
                       </Link>
                     )}
                     {(request.status === 'assigned' || request.status === 'enroute') && (
-                      <button
+                      <Button
+                        variant="tertiary"
+                        size="sm"
                         onClick={() => {
                           setSelectedRequest(request);
                           setShowNavigationModal(true);
                         }}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                        icon={<ArrowTopRightOnSquareIcon className="h-4 w-4" />}
                       >
-                        <ArrowTopRightOnSquareIcon className="h-4 w-4 mr-1" />
                         Navigate
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -448,74 +469,74 @@ const MechanicDashboard = () => {
             ))}
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="rounded-[24px] border border-hairline bg-white p-6">
+        <h2 className="mb-6 text-xl font-semibold text-primary-900">Quick Actions</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
           <Link
             to="/mechanic/requests"
-            className="group flex items-center p-6 border-2 border-gray-100 rounded-xl hover:border-primary-200 hover:bg-primary-50 transition-all duration-300 transform hover:-translate-y-1"
+            className="group flex items-center gap-4 rounded-[20px] border border-hairline bg-surface p-4 transition-colors duration-200 hover:bg-surface-soft"
           >
-            <div className="p-3 bg-primary-100 rounded-xl group-hover:bg-primary-200 transition-colors">
-              <WrenchScrewdriverIcon className="h-8 w-8 text-primary-600" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-primary-900">
+              <WrenchScrewdriverIcon className="h-5 w-5" />
             </div>
-            <div className="ml-4">
-              <h3 className="text-sm font-bold text-gray-900 group-hover:text-primary-700">View All Requests</h3>
-              <p className="text-sm text-gray-500 group-hover:text-primary-600">See all available service requests</p>
+            <div>
+              <h3 className="text-sm font-semibold text-primary-900">View All Requests</h3>
+              <p className="text-xs text-secondary-600">Available work</p>
             </div>
           </Link>
 
           <Link
             to="/mechanic/calendar"
-            className="group flex items-center p-6 border-2 border-gray-100 rounded-xl hover:border-primary-200 hover:bg-primary-50 transition-all duration-300 transform hover:-translate-y-1"
+            className="group flex items-center gap-4 rounded-[20px] border border-hairline bg-surface p-4 transition-colors duration-200 hover:bg-surface-soft"
           >
-            <div className="p-3 bg-primary-100 rounded-xl group-hover:bg-primary-200 transition-colors">
-              <CalendarIcon className="h-8 w-8 text-primary-600" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-primary-900">
+              <CalendarIcon className="h-5 w-5" />
             </div>
-            <div className="ml-4">
-              <h3 className="text-sm font-bold text-gray-900 group-hover:text-primary-700">Service Calendar</h3>
-              <p className="text-sm text-gray-500 group-hover:text-primary-600">View monthly service schedule</p>
+            <div>
+              <h3 className="text-sm font-semibold text-primary-900">Service Calendar</h3>
+              <p className="text-xs text-secondary-600">Track schedule</p>
             </div>
           </Link>
 
           <Link
             to="/mechanic/profile"
-            className="group flex items-center p-6 border-2 border-gray-100 rounded-xl hover:border-primary-200 hover:bg-primary-50 transition-all duration-300 transform hover:-translate-y-1"
+            className="group flex items-center gap-4 rounded-[20px] border border-hairline bg-surface p-4 transition-colors duration-200 hover:bg-surface-soft"
           >
-            <div className="p-3 bg-primary-100 rounded-xl group-hover:bg-primary-200 transition-colors">
-              <UserIcon className="h-8 w-8 text-primary-600" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-primary-900">
+              <UserIcon className="h-5 w-5" />
             </div>
-            <div className="ml-4">
-              <h3 className="text-sm font-bold text-gray-900 group-hover:text-primary-700">Update Profile</h3>
-              <p className="text-sm text-gray-500 group-hover:text-primary-600">Manage your profile and settings</p>
+            <div>
+              <h3 className="text-sm font-semibold text-primary-900">Update Profile</h3>
+              <p className="text-xs text-secondary-600">Manage settings</p>
             </div>
           </Link>
 
           <Link
             to="/mechanic/earnings"
-            className="group flex items-center p-6 border-2 border-gray-100 rounded-xl hover:border-primary-200 hover:bg-primary-50 transition-all duration-300 transform hover:-translate-y-1"
+            className="group flex items-center gap-4 rounded-[20px] border border-hairline bg-surface p-4 transition-colors duration-200 hover:bg-surface-soft"
           >
-            <div className="p-3 bg-primary-100 rounded-xl group-hover:bg-primary-200 transition-colors">
-              <CurrencyDollarIcon className="h-8 w-8 text-primary-600" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-primary-900">
+              <CurrencyDollarIcon className="h-5 w-5" />
             </div>
-            <div className="ml-4">
-              <h3 className="text-sm font-bold text-gray-900 group-hover:text-primary-700">View Earnings</h3>
-              <p className="text-sm text-gray-500 group-hover:text-primary-600">Track your earnings and payments</p>
+            <div>
+              <h3 className="text-sm font-semibold text-primary-900">View Earnings</h3>
+              <p className="text-xs text-secondary-600">Payments overview</p>
             </div>
           </Link>
 
           <Link
             to="/mechanic/chat"
-            className="group flex items-center p-6 border-2 border-gray-100 rounded-xl hover:border-primary-200 hover:bg-primary-50 transition-all duration-300 transform hover:-translate-y-1"
+            className="group flex items-center gap-4 rounded-[20px] border border-hairline bg-surface p-4 transition-colors duration-200 hover:bg-surface-soft"
           >
-            <div className="p-3 bg-primary-100 rounded-xl group-hover:bg-primary-200 transition-colors">
-              <ChatBubbleLeftIcon className="h-8 w-8 text-primary-600" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-primary-900">
+              <ChatBubbleLeftIcon className="h-5 w-5" />
             </div>
-            <div className="ml-4">
-              <h3 className="text-sm font-bold text-gray-900 group-hover:text-primary-700">Messages</h3>
-              <p className="text-sm text-gray-500 group-hover:text-primary-600">Chat with customers</p>
+            <div>
+              <h3 className="text-sm font-semibold text-primary-900">Messages</h3>
+              <p className="text-xs text-secondary-600">Chat with customers</p>
             </div>
           </Link>
         </div>
@@ -525,9 +546,9 @@ const MechanicDashboard = () => {
       {showVerificationForm && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowVerificationForm(false)}></div>
+            <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={() => setShowVerificationForm(false)}></div>
 
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+            <div className="inline-block align-bottom bg-white rounded-[24px] border border-hairline text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <VerificationForm onSuccess={handleVerificationSuccess} />
               </div>
@@ -557,7 +578,7 @@ const MechanicDashboard = () => {
         request={selectedRequest}
         mechanicLocation={user?.location}
       />
-    </div>
+    </MechanicSurface>
   );
 };
 

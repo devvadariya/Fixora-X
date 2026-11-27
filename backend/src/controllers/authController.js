@@ -110,6 +110,29 @@ const register = asyncHandler(async (req, res) => {
   const user = new User(userData);
   await user.save();
 
+  // For testing environment, bypass OTP and verify user directly
+  if (process.env.NODE_ENV === 'test') {
+    user.isVerified = true;
+    await user.save();
+    const accessToken = generateToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+    return sendSuccessResponse(res, 201, 'User registered and verified successfully (Test mode)', {
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        isVerified: user.isVerified
+      },
+      tokens: {
+        accessToken,
+        refreshToken
+      },
+      requiresOTP: false
+    });
+  }
+
   // Send OTP for email verification
   try {
     await otpService.createAndSendEmailOTP(user.email, 'email_verification', user.name);

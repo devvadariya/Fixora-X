@@ -379,6 +379,7 @@ const getMyRequests = asyncHandler(async (req, res) => {
 
   sendSuccessResponse(res, 200, 'Service requests retrieved successfully', {
     items: requests,
+    requests,
     totalPages: meta.pagination.totalPages,
     totalItems: meta.pagination.totalItems,
     currentPage: meta.pagination.currentPage,
@@ -434,6 +435,7 @@ const getRequestDetails = asyncHandler(async (req, res) => {
   }
 
   sendSuccessResponse(res, 200, 'Service request details retrieved', {
+    ...(request.toObject ? request.toObject() : request),
     request,
     distance
   });

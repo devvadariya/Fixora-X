@@ -25,7 +25,7 @@ const ChatMessage = ({ message }) => {
 
     if (message.messageType === 'file') {
       return (
-        <div className="flex items-center gap-2 p-2 bg-gray-100 rounded-lg">
+        <div className="flex items-center gap-2 p-2 bg-surface rounded-lg">
           <span className="text-lg">📎</span>
           <div>
             <p className="text-sm font-medium">File attached</p>
@@ -33,7 +33,7 @@ const ChatMessage = ({ message }) => {
               href={message.fileUrl} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-xs text-blue-600 hover:underline"
+              className="text-xs text-primary-900 hover:underline"
             >
               View file
             </a>
@@ -52,12 +52,12 @@ const ChatMessage = ({ message }) => {
           className={`rounded-lg px-4 py-2 ${
             isOwnMessage
               ? 'bg-primary-600 text-white'
-              : 'bg-gray-200 text-gray-900'
+              : 'bg-hairline-soft text-ink'
           }`}
         >
           {renderMessageContent()}
         </div>
-        <div className={`flex items-center gap-2 mt-1 text-xs text-gray-500 ${
+        <div className={`flex items-center gap-2 mt-1 text-xs text-secondary-500 ${
           isOwnMessage ? 'justify-end' : 'justify-start'
         }`}>
           <span>{message.sender.name}</span>

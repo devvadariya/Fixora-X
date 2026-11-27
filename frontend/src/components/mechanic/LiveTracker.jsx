@@ -432,9 +432,9 @@ const LiveTracker = ({ activeRequest = null, onLocationUpdate }) => {
 
       {/* Tracking Guidelines Below*/}
       {!activeRequest && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">Location Tracking Guidelines</h3>
-          <ul className="text-sm text-blue-800 space-y-1">
+        <div className="bg-primary-50 border border-primary-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-primary-900 mb-2">Location Tracking Guidelines</h3>
+          <ul className="text-sm text-primary-900 space-y-1">
             <li>• Location tracking automatically starts when you accept a request</li>
             <li>• Your location is shared with the customer for better service coordination</li>
             <li>• Tracking stops when the request is completed or cancelled</li>

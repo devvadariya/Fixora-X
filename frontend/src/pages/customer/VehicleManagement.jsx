@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  PlusIcon, 
-  PencilIcon, 
-  TrashIcon, 
+import {
+  PencilIcon,
+  PlusIcon,
   StarIcon,
-  TruckIcon
-} from '@heroicons/react/24/outline';
-import Button from '../../components/common/Button';
-import customerApi from '../../api/customerApi';
-import toast from 'react-hot-toast';
+  TrashIcon,
+  TruckIcon,
+} from "@heroicons/react/24/outline";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import customerApi from "../../api/customerApi";
+import Button from "../../components/common/Button";
 
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -17,22 +17,22 @@ const VehicleManagement = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    type: 'car',
-    make: '',
-    model: '',
+    name: "",
+    type: "car",
+    make: "",
+    model: "",
     year: new Date().getFullYear(),
-    plate: '',
-    color: '',
-    isDefault: false
+    plate: "",
+    color: "",
+    isDefault: false,
   });
 
   const vehicleTypes = [
-    { value: 'car', label: 'Car', icon: TruckIcon },
-    { value: 'motorcycle', label: 'Motorcycle', icon: TruckIcon },
-    { value: 'truck', label: 'Truck', icon: TruckIcon },
-    { value: 'bus', label: 'Bus', icon: TruckIcon },
-    { value: 'other', label: 'Other', icon: TruckIcon }
+    { value: "car", label: "Car", icon: TruckIcon },
+    { value: "motorcycle", label: "Motorcycle", icon: TruckIcon },
+    { value: "truck", label: "Truck", icon: TruckIcon },
+    { value: "bus", label: "Bus", icon: TruckIcon },
+    { value: "other", label: "Other", icon: TruckIcon },
   ];
 
   useEffect(() => {
@@ -47,82 +47,85 @@ const VehicleManagement = () => {
         setVehicles(response.data);
       }
     } catch (error) {
-      console.error('Error fetching vehicles:', error);
-      toast.error('Failed to load vehicles');
+      console.error("Error fetching vehicles:", error);
+      toast.error("Failed to load vehicles");
     } finally {
       setLoading(false);
     }
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      type: 'car',
-      make: '',
-      model: '',
+      name: "",
+      type: "car",
+      make: "",
+      model: "",
       year: new Date().getFullYear(),
-      plate: '',
-      color: '',
-      isDefault: false
+      plate: "",
+      color: "",
+      isDefault: false,
     });
   };
 
   const handleAddVehicle = async (e) => {
     e.preventDefault();
-    
+
     try {
       const response = await customerApi.addVehicle(formData);
       if (response.success) {
-        toast.success('Vehicle added successfully');
+        toast.success("Vehicle added successfully");
         setShowAddModal(false);
         resetForm();
         fetchVehicles();
       }
     } catch (error) {
-      console.error('Error adding vehicle:', error);
-      toast.error(error.response?.data?.message || 'Failed to add vehicle');
+      console.error("Error adding vehicle:", error);
+      toast.error(error.response?.data?.message || "Failed to add vehicle");
     }
   };
 
   const handleEditVehicle = async (e) => {
     e.preventDefault();
-    
+
     try {
-      const response = await customerApi.updateVehicle(selectedVehicle._id, formData);
+      const response = await customerApi.updateVehicle(
+        selectedVehicle._id,
+        formData,
+      );
       if (response.success) {
-        toast.success('Vehicle updated successfully');
+        toast.success("Vehicle updated successfully");
         setShowEditModal(false);
         setSelectedVehicle(null);
         resetForm();
         fetchVehicles();
       }
     } catch (error) {
-      console.error('Error updating vehicle:', error);
-      toast.error(error.response?.data?.message || 'Failed to update vehicle');
+      console.error("Error updating vehicle:", error);
+      toast.error(error.response?.data?.message || "Failed to update vehicle");
     }
   };
 
   const handleDeleteVehicle = async (vehicleId) => {
-    if (!window.confirm('Are you sure you want to delete this vehicle?')) {
+    if (!window.confirm("Are you sure you want to delete this vehicle?")) {
       return;
     }
 
     try {
       const response = await customerApi.deleteVehicle(vehicleId);
       if (response.success) {
-        toast.success('Vehicle deleted successfully');
+        toast.success("Vehicle deleted successfully");
         fetchVehicles();
       }
     } catch (error) {
-      console.error('Error deleting vehicle:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete vehicle');
+      console.error("Error deleting vehicle:", error);
+      toast.error(error.response?.data?.message || "Failed to delete vehicle");
     }
   };
 
@@ -130,12 +133,14 @@ const VehicleManagement = () => {
     try {
       const response = await customerApi.setDefaultVehicle(vehicleId);
       if (response.success) {
-        toast.success('Default vehicle updated');
+        toast.success("Default vehicle updated");
         fetchVehicles();
       }
     } catch (error) {
-      console.error('Error setting default vehicle:', error);
-      toast.error(error.response?.data?.message || 'Failed to set default vehicle');
+      console.error("Error setting default vehicle:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to set default vehicle",
+      );
     }
   };
 
@@ -148,8 +153,8 @@ const VehicleManagement = () => {
       model: vehicle.model,
       year: vehicle.year,
       plate: vehicle.plate,
-      color: vehicle.color || '',
-      isDefault: vehicle.isDefault
+      color: vehicle.color || "",
+      isDefault: vehicle.isDefault,
     });
     setShowEditModal(true);
   };
@@ -160,7 +165,7 @@ const VehicleManagement = () => {
   };
 
   const getVehicleTypeIcon = (type) => {
-    const vehicleType = vehicleTypes.find(vt => vt.value === type);
+    const vehicleType = vehicleTypes.find((vt) => vt.value === type);
     const IconComponent = vehicleType?.icon || TruckIcon;
     return <IconComponent className="h-6 w-6" />;
   };
@@ -178,7 +183,9 @@ const VehicleManagement = () => {
       <div className="bg-white rounded-lg shadow-card p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-secondary-900">My Vehicles</h1>
+            <h1 className="text-2xl font-bold text-secondary-900">
+              My Vehicles
+            </h1>
             <p className="text-secondary-600 mt-1">
               Manage your saved vehicles for quick service requests
             </p>
@@ -195,10 +202,13 @@ const VehicleManagement = () => {
 
         {vehicles.length === 0 ? (
           <div className="text-center py-12">
-            <TruckIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No vehicles saved</h3>
-            <p className="text-gray-500 mb-4">
-              Add your vehicles to quickly create service requests without entering details each time.
+            <TruckIcon className="w-16 h-16 text-secondary-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-ink mb-2">
+              No vehicles saved
+            </h3>
+            <p className="text-secondary-500 mb-4">
+              Add your vehicles to quickly create service requests without
+              entering details each time.
             </p>
             <Button onClick={openAddModal} variant="primary">
               Add Your First Vehicle
@@ -207,23 +217,26 @@ const VehicleManagement = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {vehicles.map((vehicle) => (
-              <div key={vehicle._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div
+                key={vehicle._id}
+                className="border border-hairline rounded-2xl p-4 hover:shadow-card transition-shadow bg-surface"
+              >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     {getVehicleTypeIcon(vehicle.type)}
                     <div>
-                      <h3 className="font-semibold text-gray-900">{vehicle.name}</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className="font-semibold text-ink">{vehicle.name}</h3>
+                      <p className="text-sm text-secondary-500">
                         {vehicle.make} {vehicle.model} ({vehicle.year})
                       </p>
                     </div>
                   </div>
                   {vehicle.isDefault && (
-                    <StarIcon className="h-5 w-5 text-yellow-500 fill-current" />
+                    <StarIcon className="h-5 w-5 text-warning-500 fill-current" />
                   )}
                 </div>
 
-                <div className="space-y-2 text-sm text-gray-600 mb-4">
+                <div className="space-y-2 text-sm text-secondary-600 mb-4">
                   <div className="flex justify-between">
                     <span>License Plate:</span>
                     <span className="font-medium">{vehicle.plate}</span>
@@ -236,7 +249,9 @@ const VehicleManagement = () => {
                   )}
                   <div className="flex justify-between">
                     <span>Type:</span>
-                    <span className="font-medium capitalize">{vehicle.type}</span>
+                    <span className="font-medium capitalize">
+                      {vehicle.type}
+                    </span>
                   </div>
                 </div>
 
@@ -276,33 +291,35 @@ const VehicleManagement = () => {
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold mb-4">Add New Vehicle</h2>
+            <h2 className="text-xl font-semibold mb-4 text-ink">
+              Add New Vehicle
+            </h2>
             <form onSubmit={handleAddVehicle} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-ink mb-1">
                   Vehicle Name *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
                   placeholder="e.g., My Honda City"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-ink mb-1">
                   Vehicle Type *
                 </label>
                 <select
                   value={formData.type}
-                  onChange={(e) => handleInputChange('type', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onChange={(e) => handleInputChange("type", e.target.value)}
+                  className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                   required
                 >
-                  {vehicleTypes.map(type => (
+                  {vehicleTypes.map((type) => (
                     <option key={type.value} value={type.value}>
                       {type.label}
                     </option>
@@ -312,28 +329,28 @@ const VehicleManagement = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-ink mb-1">
                     Make *
                   </label>
                   <input
                     type="text"
                     value={formData.make}
-                    onChange={(e) => handleInputChange('make', e.target.value)}
+                    onChange={(e) => handleInputChange("make", e.target.value)}
                     placeholder="e.g., Honda"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-ink mb-1">
                     Model *
                   </label>
                   <input
                     type="text"
                     value={formData.model}
-                    onChange={(e) => handleInputChange('model', e.target.value)}
+                    onChange={(e) => handleInputChange("model", e.target.value)}
                     placeholder="e.g., City"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                     required
                   />
                 </div>
@@ -341,43 +358,45 @@ const VehicleManagement = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-ink mb-1">
                     Year *
                   </label>
                   <input
                     type="number"
                     value={formData.year}
-                    onChange={(e) => handleInputChange('year', parseInt(e.target.value))}
+                    onChange={(e) =>
+                      handleInputChange("year", parseInt(e.target.value))
+                    }
                     min="1900"
                     max={new Date().getFullYear() + 1}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-ink mb-1">
                     Color
                   </label>
                   <input
                     type="text"
                     value={formData.color}
-                    onChange={(e) => handleInputChange('color', e.target.value)}
+                    onChange={(e) => handleInputChange("color", e.target.value)}
                     placeholder="e.g., White"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-ink mb-1">
                   License Plate *
                 </label>
                 <input
                   type="text"
                   value={formData.plate}
-                  onChange={(e) => handleInputChange('plate', e.target.value)}
+                  onChange={(e) => handleInputChange("plate", e.target.value)}
                   placeholder="e.g., MH12AB1234"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                   required
                 />
               </div>
@@ -387,10 +406,15 @@ const VehicleManagement = () => {
                   type="checkbox"
                   id="isDefault"
                   checked={formData.isDefault}
-                  onChange={(e) => handleInputChange('isDefault', e.target.checked)}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  onChange={(e) =>
+                    handleInputChange("isDefault", e.target.checked)
+                  }
+                  className="h-4 w-4 text-primary-600 focus-visible:ring-primary-900 border-hairline rounded"
                 />
-                <label htmlFor="isDefault" className="ml-2 block text-sm text-gray-900">
+                <label
+                  htmlFor="isDefault"
+                  className="ml-2 block text-sm text-ink"
+                >
                   Set as default vehicle
                 </label>
               </div>
@@ -417,33 +441,35 @@ const VehicleManagement = () => {
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold mb-4">Edit Vehicle</h2>
+            <h2 className="text-xl font-semibold mb-4 text-ink">
+              Edit Vehicle
+            </h2>
             <form onSubmit={handleEditVehicle} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-ink mb-1">
                   Vehicle Name *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
                   placeholder="e.g., My Honda City"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-ink mb-1">
                   Vehicle Type *
                 </label>
                 <select
                   value={formData.type}
-                  onChange={(e) => handleInputChange('type', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onChange={(e) => handleInputChange("type", e.target.value)}
+                  className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                   required
                 >
-                  {vehicleTypes.map(type => (
+                  {vehicleTypes.map((type) => (
                     <option key={type.value} value={type.value}>
                       {type.label}
                     </option>
@@ -453,28 +479,28 @@ const VehicleManagement = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-ink mb-1">
                     Make *
                   </label>
                   <input
                     type="text"
                     value={formData.make}
-                    onChange={(e) => handleInputChange('make', e.target.value)}
+                    onChange={(e) => handleInputChange("make", e.target.value)}
                     placeholder="e.g., Honda"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-ink mb-1">
                     Model *
                   </label>
                   <input
                     type="text"
                     value={formData.model}
-                    onChange={(e) => handleInputChange('model', e.target.value)}
+                    onChange={(e) => handleInputChange("model", e.target.value)}
                     placeholder="e.g., City"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                     required
                   />
                 </div>
@@ -482,43 +508,45 @@ const VehicleManagement = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-ink mb-1">
                     Year *
                   </label>
                   <input
                     type="number"
                     value={formData.year}
-                    onChange={(e) => handleInputChange('year', parseInt(e.target.value))}
+                    onChange={(e) =>
+                      handleInputChange("year", parseInt(e.target.value))
+                    }
                     min="1900"
                     max={new Date().getFullYear() + 1}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-ink mb-1">
                     Color
                   </label>
                   <input
                     type="text"
                     value={formData.color}
-                    onChange={(e) => handleInputChange('color', e.target.value)}
+                    onChange={(e) => handleInputChange("color", e.target.value)}
                     placeholder="e.g., White"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-ink mb-1">
                   License Plate *
                 </label>
                 <input
                   type="text"
                   value={formData.plate}
-                  onChange={(e) => handleInputChange('plate', e.target.value)}
+                  onChange={(e) => handleInputChange("plate", e.target.value)}
                   placeholder="e.g., MH12AB1234"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 border border-hairline rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-900"
                   required
                 />
               </div>
@@ -528,10 +556,15 @@ const VehicleManagement = () => {
                   type="checkbox"
                   id="isDefaultEdit"
                   checked={formData.isDefault}
-                  onChange={(e) => handleInputChange('isDefault', e.target.checked)}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  onChange={(e) =>
+                    handleInputChange("isDefault", e.target.checked)
+                  }
+                  className="h-4 w-4 text-primary-600 focus-visible:ring-primary-900 border-hairline rounded"
                 />
-                <label htmlFor="isDefaultEdit" className="ml-2 block text-sm text-gray-900">
+                <label
+                  htmlFor="isDefaultEdit"
+                  className="ml-2 block text-sm text-ink"
+                >
                   Set as default vehicle
                 </label>
               </div>
